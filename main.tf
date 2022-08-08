@@ -305,7 +305,9 @@ resource "google_compute_backend_service" "default" {
 
 # Public routing of the service. Can be a domain map or a load balancer.
 module "domain-map" {
-  source    = "./modules/domain-map"
+  depends_on      = [google_project_service.required]
+  count           = (var.with_domain_map) ? 1 : 0
+  source          = "./modules/domain-map"
   dns_project     = var.dns_project
   dns_zone        = var.dns_zone
   locations       = var.locations

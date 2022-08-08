@@ -68,7 +68,8 @@ variable "project" {
 }
 
 variable "secrets" {
-  type = list(
+  default = []
+  type    = list(
     object({
       name = string
       secret = string
