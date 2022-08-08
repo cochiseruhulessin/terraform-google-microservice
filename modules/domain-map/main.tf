@@ -31,6 +31,7 @@ resource "google_cloud_run_domain_mapping" "default" {
 }
 
 resource "google_dns_record_set" "dns" {
+  depends_on    = [google_cloud_run_domain_mapping.default]
   for_each      = merge([
     for spec in google_cloud_run_domain_mapping.default: {
       for record in spec.status[0].resource_records:

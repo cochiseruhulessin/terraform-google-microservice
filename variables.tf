@@ -6,6 +6,21 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+variable "artifact_registry_location" {
+  type    = string
+  default = null
+}
+
+variable "artifact_registry_name" {
+  type    = string
+  default = null
+}
+
+variable "artifact_registry_project" {
+  type    = string
+  default = null
+}
+
 variable "base_domain" {
   type = string
 }
@@ -14,8 +29,27 @@ variable "billing_account" {
   type = string
 }
 
+variable "container_args" {
+  default = []
+  type    = list(string)
+}
+
+variable "cpu_count" {
+  type    = number
+  default = 1
+}
+
+variable "datastore_location" {
+  type    = string
+  default = null
+}
+
 variable "deployers" {
   type = list(string)
+}
+
+variable "deployment_env" {
+  type = string
 }
 
 variable "dns_project" {
@@ -29,6 +63,11 @@ variable "dns_zone" {
 variable "enable_cdn" {
   type = bool
   default = false
+}
+
+variable "http_loglevel" {
+  type    = string
+  default = "CRITICAL"
 }
 
 variable "ingress" {
@@ -64,6 +103,11 @@ variable "ping_schedule" {
 }
 
 variable "project" {
+  type    = string
+}
+
+variable "pubsub_topic_prefix" {
+  default = null
   type    = string
 }
 

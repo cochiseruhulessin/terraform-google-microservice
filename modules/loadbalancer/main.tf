@@ -21,11 +21,6 @@ terraform {
 # Create an ACME registration with Lets Encrypt for this specific
 # service and obtain a certificate. Create a Google SSL certificate
 # for use with the load balancer.
-data "google_dns_managed_zone" "zone" {
-  project = var.dns_project
-  name    = var.dns_zone
-}
-
 resource "tls_private_key" "acme" {
   algorithm   = "ECDSA"
   ecdsa_curve = "P384"
@@ -68,7 +63,7 @@ resource "acme_certificate" "crt" {
     provider = "gcloud"
 
     config = {
-      GCE_PROJECT = data.google_dns_managed_zone.zone.project
+      GCE_PROJECT = var.dns_project
     }
   }
 }
@@ -123,9 +118,9 @@ resource "google_compute_global_forwarding_rule" "https" {
 }
 
 resource "google_dns_record_set" "dns" {
-  managed_zone  = data.google_dns_managed_zone.zone.name
-  project       = data.google_dns_managed_zone.zone.project
-  name          = "${var.service_id}${(var.subdomain != null) ? ".${var.subdomain}" : ""}.${data.google_dns_managed_zone.zone.dns_name}"
+  managed_zone  = var.dns_zone
+  project       = var.dns_project
+  name          = "${var.service_domain}."
   type          = "A"
   ttl           = 60
   rrdatas       = [google_compute_global_address.ipv4.address]

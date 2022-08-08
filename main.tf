@@ -19,13 +19,18 @@ terraform {
 }
 
 locals {
-  project = (var.isolate) ? google_project.service[0].project_id : var.project
-  service_domain = "${var.service_id}.${var.base_domain}"
-  suffix = {
+  primary_location  = var.locations[0]
+  project           = (var.isolate) ? google_project.service[0].project_id : var.project
+  services          = [
+    for spec in google_cloud_run_service.default:
+    {location = spec.location, name = spec.name, project = spec.project}
+  ]
+  service_domain    = "${var.service_id}.${var.base_domain}"
+  suffix            = {
     for location, spec in random_string.locations:
     location => spec.result
   }
-  secrets = {for spec in var.secrets: spec.name => spec.secret}
+  secrets           = {for spec in var.secrets: spec.name => spec.secret}
 }
 
 # Generate a random suffic for the service-specific project and create
@@ -49,6 +54,7 @@ resource "google_project_service" "required" {
     "cloudkms.googleapis.com",
     "compute.googleapis.com",
     "dns.googleapis.com",
+    "eventarc.googleapis.com",
     "run.googleapis.com",
     "secretmanager.googleapis.com",
   ])
@@ -181,11 +187,12 @@ resource "google_secret_manager_secret_iam_binding" "secretAccessor" {
 # Create the Cloud Run service, a backend, network endpoint
 # group.
 resource "google_cloud_run_service" "default" {
-  depends_on = [google_project_service.required]
-  for_each  = toset(var.locations)
-  project   = local.project
-  name      = var.service_id
-  location  = each.key
+  depends_on                  = [google_project_service.required]
+  for_each                    = toset(var.locations)
+  project                     = local.project
+  name                        = var.service_id
+  location                    = each.key
+  autogenerate_revision_name  = true
 
   metadata {
     annotations = {
@@ -201,10 +208,18 @@ resource "google_cloud_run_service" "default" {
 
       containers {
         image = "us-docker.pkg.dev/cloudrun/container/hello"
+        args  = var.container_args
 
         ports {
           name            = "http1"
           container_port  = 8000
+        }
+
+        resources {
+          limits = {
+            cpu = "${var.cpu_count}000m"
+            memory: "512Mi"
+          }
         }
 
         dynamic "env" {
@@ -220,6 +235,11 @@ resource "google_cloud_run_service" "default" {
           }
         }
 
+        env {
+          name  = "DEPLOYMENT_ENV"
+          value = var.deployment_env
+        }
+
         # TODO: We assume here that the container is only ever
         # running behind a Google load balancer.
         env {
@@ -229,10 +249,23 @@ resource "google_cloud_run_service" "default" {
 
         env {
           name  = "HTTP_LOGLEVEL"
-          value = "CRITICAL"
+          value = var.http_loglevel
+        }
+
+        env {
+          name  = "HTTP_WORKERS"
+          value = var.cpu_count
         }
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template.0.spec.0.containers.0.image,
+      metadata[0].annotations["client.knative.dev/user-image"],
+      metadata[0].annotations["run.googleapis.com/client-name"],
+    ]
   }
 }
 
@@ -259,6 +292,19 @@ resource "google_cloud_run_service_iam_policy" "default" {
   service     = each.value.name
   policy_data = data.google_iam_policy.default.policy_data
 }
+
+# If the artifact registry is in a different project, then grant
+# permission to the Cloud Run Service Agent of this project
+# to pull images.
+resource "google_artifact_registry_repository_iam_member" "cloudrun" {
+  count       = (var.artifact_registry_project != null) ? 1 : 0
+  project     = var.artifact_registry_project
+  location    = var.artifact_registry_location
+  repository  = var.artifact_registry_name
+  role        = "roles/artifactregistry.reader"
+  member      = "serviceAccount:service-${google_project.service[0].number}@serverless-robot-prod.iam.gserviceaccount.com"
+}
+
 
 resource "google_compute_region_network_endpoint_group" "endpoint" {
   depends_on            = [google_project_service.required]
@@ -301,6 +347,18 @@ resource "google_compute_backend_service" "default" {
   log_config {
     enable = true
   }
+}
+
+# PubSub
+
+# Storage
+module "datastore" {
+  source              = "./modules/datastore"
+  depends_on          = [google_project_service.required, google_service_account.default]
+  count               = (var.datastore_location != null) ? 1 : 0
+  datastore_location  = var.datastore_location
+  project             = google_project.service[0].project_id
+  service_account     = google_service_account.default.email
 }
 
 # Public routing of the service. Can be a domain map or a load balancer.
