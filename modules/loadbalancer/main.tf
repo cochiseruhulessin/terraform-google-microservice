@@ -86,8 +86,12 @@ resource "google_compute_ssl_certificate" "tls" {
 
 resource "google_compute_url_map" "default" {
   project         = var.project
-  name            = "default"
+  name            = "service-${var.service_id}"
   default_service = var.backend_id
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "google_compute_global_address" "ipv4" {

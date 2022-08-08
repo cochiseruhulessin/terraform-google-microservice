@@ -320,7 +320,7 @@ module "domain-map" {
 }
 
 module "loadbalancer" {
-  depends_on      = [google_project_service.required]
+  depends_on      = [google_project_service.required, google_cloud_run_service.default]
   count           = (var.with_loadbalancer) ? 1 : 0
   backend_id      = google_compute_backend_service.default.id
   source          = "./modules/loadbalancer"
