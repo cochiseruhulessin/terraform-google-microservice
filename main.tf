@@ -305,6 +305,7 @@ resource "google_cloud_run_service_iam_policy" "default" {
 # permission to the Cloud Run Service Agent of this project
 # to pull images.
 resource "google_artifact_registry_repository_iam_member" "cloudrun" {
+  depends_on  = [google_cloud_run_service.default]
   count       = (var.artifact_registry_project != null) ? 1 : 0
   project     = var.artifact_registry_project
   location    = var.artifact_registry_location
