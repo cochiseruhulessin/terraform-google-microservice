@@ -50,14 +50,17 @@ resource "google_project" "service" {
 }
 
 resource "google_project_service" "required" {
-  for_each = toset([
-    "cloudkms.googleapis.com",
-    "compute.googleapis.com",
-    "dns.googleapis.com",
-    "eventarc.googleapis.com",
-    "run.googleapis.com",
-    "secretmanager.googleapis.com",
-  ])
+  for_each = toset(
+    concat([
+      "cloudkms.googleapis.com",
+      "compute.googleapis.com",
+      "dns.googleapis.com",
+      "eventarc.googleapis.com",
+      "run.googleapis.com",
+      "secretmanager.googleapis.com",
+    ],
+    (var.datastore_location != null) ? ["datastore.googleapis.com"] : []
+  ))
   project            = local.project
   service            = each.key
   disable_on_destroy = false
