@@ -208,7 +208,6 @@ resource "google_cloud_run_service" "default" {
 
       containers {
         image = "us-docker.pkg.dev/cloudrun/container/hello"
-        args  = var.container_args
 
         ports {
           name            = "http1"
