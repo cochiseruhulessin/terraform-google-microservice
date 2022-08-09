@@ -243,6 +243,16 @@ resource "google_cloud_run_service" "default" {
         }
 
         env {
+          name  = "APP_ENCRYPTION_KEY"
+          value = google_kms_crypto_key.enc.id
+        }
+
+        env {
+          name  = "APP_SIGNING_KEY"
+          value = google_kms_crypto_key.sig.id
+        }
+
+        env {
           name  = "DEPLOYMENT_ENV"
           value = var.deployment_env
         }
