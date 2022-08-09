@@ -44,6 +44,16 @@ variable "datastore_location" {
   default = null
 }
 
+variable "default_log_bucket" {
+  type    = string
+  default = null
+}
+
+variable "default_log_location" {
+  type    = string
+  default = null
+}
+
 variable "deployers" {
   type = list(string)
 }

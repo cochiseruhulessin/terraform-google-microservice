@@ -417,3 +417,11 @@ module "loadbalancer" {
   subdomain       = var.subdomain
   suffix          = random_string.project_suffix.result
 }
+
+module "logging" {
+  count           = (var.default_log_bucket != null && var.default_log_location != null) ? 1 : 0
+  source          = "./modules/logging"
+  destination     = "logging.googleapis.com/projects/${var.project}/locations/${var.default_log_location}/buckets/${var.default_log_bucket}"
+  project         = var.project
+  service_project = google_project.service[0].project_id
+}
