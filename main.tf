@@ -187,7 +187,10 @@ resource "google_secret_manager_secret_iam_binding" "secretAccessor" {
 # Create the Cloud Run service, a backend, network endpoint
 # group.
 resource "google_cloud_run_service" "default" {
-  depends_on                  = [google_project_service.required]
+  depends_on                  = [
+    google_project_service.required,
+    google_secret_manager_secret_iam_binding.secretAccessor
+  ]
   for_each                    = toset(var.locations)
   project                     = local.project
   name                        = var.service_id
