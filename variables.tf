@@ -134,6 +134,11 @@ variable "subdomain" {
   default = null
 }
 
+variable "variables" {
+  type    = map(string)
+  default = {}
+}
+
 variable "with_domain_map" {
   type    = bool
   default = false

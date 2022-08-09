@@ -223,6 +223,14 @@ resource "google_cloud_run_service" "default" {
         }
 
         dynamic "env" {
+          for_each = toset(keys(var.variables))
+          content {
+            name  = env.key
+            value = var.variables[env.key]
+          }
+        }
+
+        dynamic "env" {
           for_each = local.secrets
           content {
             name = env.key
