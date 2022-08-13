@@ -31,6 +31,13 @@ locals {
     location => spec.result
   }
   secrets           = {for spec in var.secrets: spec.name => spec.secret}
+  triggers          = {
+    for params in setproduct(toset(var.locations), toset(var.events)):
+      "${params[1]}/${params[0]}" => {
+        location  = params[0]
+        topic     = params[1]
+      }
+  }
 }
 
 # Generate a random suffic for the service-specific project and create
@@ -271,6 +278,11 @@ resource "google_cloud_run_service" "default" {
         }
 
         env {
+          name  = "GOOGLE_SERVICE_ACCOUNT_EMAIL"
+          value = google_service_account.default.email
+        }
+
+        env {
           name  = "HTTP_LOGLEVEL"
           value = var.http_loglevel
         }
@@ -330,7 +342,7 @@ resource "google_artifact_registry_repository_iam_member" "cloudrun" {
   member      = "serviceAccount:service-${google_project.service[0].number}@serverless-robot-prod.iam.gserviceaccount.com"
 }
 
-
+# Deploy networking resource for use with a load balancer.
 resource "google_compute_region_network_endpoint_group" "endpoint" {
   depends_on            = [google_project_service.required]
   for_each              = toset(var.locations)
@@ -374,7 +386,6 @@ resource "google_compute_backend_service" "default" {
   }
 }
 
-# PubSub
 
 # Storage
 module "datastore" {
@@ -423,5 +434,16 @@ module "logging" {
   source          = "./modules/logging"
   destination     = "logging.googleapis.com/projects/${var.project}/locations/${var.default_log_location}/buckets/${var.default_log_bucket}"
   project         = var.project
+  service_project = google_project.service[0].project_id
+}
+
+module "pubsub" {
+  source          = "./modules/pubsub"
+  audience        = "https://${local.service_domain}/.well-known/aorta-event-endpoint"
+  endpoint        = "https://${local.service_domain}/.well-known/aorta-event-endpoint"
+  events          = var.events
+  host_project    = var.project
+  service_account = google_service_account.default.email
+  service_id      = var.service_id
   service_project = google_project.service[0].project_id
 }

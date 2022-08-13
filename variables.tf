@@ -75,6 +75,12 @@ variable "enable_cdn" {
   default = false
 }
 
+variable "events" {
+  type        = set(string)
+  default     = []
+  description = "The set of events that this service is interested in."
+}
+
 variable "http_loglevel" {
   type    = string
   default = "CRITICAL"
