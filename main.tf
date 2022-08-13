@@ -291,6 +291,11 @@ resource "google_cloud_run_service" "default" {
           name  = "HTTP_WORKERS"
           value = var.cpu_count
         }
+
+        env {
+          name  = "PYTHONUNBUFFERED"
+          value = "True"
+        }
       }
     }
   }
