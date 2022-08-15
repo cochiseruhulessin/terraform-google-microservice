@@ -449,8 +449,8 @@ module "logging" {
 
 module "pubsub" {
   source          = "./modules/pubsub"
-  audience        = "https://${local.service_domain}/.well-known/aorta-event-endpoint"
-  endpoint        = "https://${local.service_domain}/.well-known/aorta-event-endpoint"
+  audience        = "https://${local.service_domain}/.well-known/aorta"
+  endpoint        = "https://${local.service_domain}/.well-known/aorta"
   events          = var.events
   host_project    = var.project
   service_account = google_service_account.default.email
