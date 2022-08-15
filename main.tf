@@ -311,6 +311,7 @@ resource "google_cloud_run_service" "default" {
       template.0.spec.0.containers.0.image,
       metadata[0].annotations["client.knative.dev/user-image"],
       metadata[0].annotations["run.googleapis.com/client-name"],
+      metadata[0].annotations["run.googleapis.com/client-version"],
     ]
   }
 }
@@ -453,6 +454,7 @@ module "pubsub" {
   endpoint        = "https://${local.service_domain}/.well-known/aorta"
   events          = var.events
   host_project    = var.project
+  services        = local.services
   service_account = google_service_account.default.email
   service_id      = var.service_id
   service_project = google_project.service[0].project_id

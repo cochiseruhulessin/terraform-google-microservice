@@ -27,6 +27,16 @@ variable "host_project" {
   description = "The host project in which shared resources are maintained."
 }
 
+variable "services" {
+  type = list(
+    object({
+      project   = string
+      name      = string
+      location  = string
+    })
+  )
+}
+
 variable "service_account" {
   type        = string
   description = "The service account that signs the messages."
