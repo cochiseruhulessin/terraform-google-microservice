@@ -8,10 +8,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 terraform {
   required_providers {
-    acme = {
-      source = "vancluever/acme"
-      version = "2.6.0"
-    }
     tls = {
       version = "3.1.0"
     }
@@ -429,7 +425,6 @@ module "loadbalancer" {
   count           = (var.with_loadbalancer) ? 1 : 0
   backend_id      = google_compute_backend_service.default.id
   source          = "./modules/loadbalancer"
-  acme_email      = "${var.project}+${var.service_id}@services.ops.unimatrixone.io"
   dns_project     = var.dns_project
   dns_zone        = var.dns_zone
   locations       = var.locations

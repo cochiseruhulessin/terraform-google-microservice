@@ -8,76 +8,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 terraform {
   required_providers {
-    acme = {
-      source = "vancluever/acme"
-      version = "2.6.0"
-    }
     tls = {
       version = "3.1.0"
     }
   }
 }
 
-# Create an ACME registration with Lets Encrypt for this specific
-# service and obtain a certificate. Create a Google SSL certificate
-# for use with the load balancer.
-resource "tls_private_key" "acme" {
-  algorithm   = "ECDSA"
-  ecdsa_curve = "P384"
-}
-
-resource "acme_registration" "default" {
-  account_key_pem = tls_private_key.acme.private_key_pem
-  email_address   = var.acme_email
-}
-
-resource "tls_private_key" "server" {
-  algorithm = "RSA"
-  rsa_bits  = 2048
-}
-
-resource "tls_cert_request" "csr" {
-  depends_on = [tls_private_key.server]
-  key_algorithm   = "RSA"
-  private_key_pem = tls_private_key.server.private_key_pem
-  dns_names       = [var.service_domain]
-
-  subject {
-    country             = "NL"
-    province            = "Gelderland"
-    locality            = "Wezep"
-    organization        = "Unimatrix One B.V."
-    organizational_unit = "PKI"
-    common_name         = var.service_domain
-  }
-}
-
-resource "acme_certificate" "crt" {
-  depends_on              = [tls_private_key.server, acme_registration.default]
-  account_key_pem         = tls_private_key.acme.private_key_pem
-  certificate_request_pem = tls_cert_request.csr.cert_request_pem
-  min_days_remaining      = 30
-  recursive_nameservers   = ["8.8.8.8:53"]
-
-  dns_challenge {
-    provider = "gcloud"
-
-    config = {
-      GCE_PROJECT = var.dns_project
-    }
-  }
-}
-
-resource "google_compute_ssl_certificate" "tls" {
-  depends_on  = [tls_private_key.server]
-  project     = var.project
-  private_key = tls_private_key.server.private_key_pem
-  certificate = "${acme_certificate.crt.certificate_pem}${acme_certificate.crt.issuer_pem}"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+#module "acme" {
+#  count           = (var.certificate_issuer == "letsencrypt") ? 1 : 0
+#  acme_email      = var.acme_email
+#  dns_project     = var.dns_project
+#  project         = var.project
+#  service_domain  = var.service_domain
+#  source          = "./modules/acme"
+#}
 
 resource "google_compute_url_map" "default" {
   project         = var.project
@@ -95,15 +39,29 @@ resource "google_compute_global_address" "ipv4" {
   name       = "service-${var.service_id}-${var.suffix}"
 }
 
+resource "google_compute_managed_ssl_certificate" "default" {
+  project = var.project 
+  name    = "${var.service_id}-${var.suffix}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  managed {
+    domains = ["${var.service_domain}."]
+  }
+}
+
 resource "google_compute_target_https_proxy" "default" {
-  depends_on       = [google_compute_url_map.default]
+  depends_on       = [
+    google_compute_url_map.default,
+    google_compute_managed_ssl_certificate.default
+  ]
   project          = var.project
   provider         = google
   name             = "service-${var.service_id}-${var.suffix}"
   url_map          = google_compute_url_map.default.self_link
-  ssl_certificates = [
-    google_compute_ssl_certificate.tls.self_link
-  ]
+  ssl_certificates = [google_compute_managed_ssl_certificate.default.id]
 }
 
 resource "google_compute_global_forwarding_rule" "https" {
