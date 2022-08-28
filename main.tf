@@ -151,6 +151,19 @@ resource "google_kms_crypto_key" "enc" {
   }
 }
 
+resource "google_kms_crypto_key" "keys" {
+  depends_on      = [google_kms_key_ring.default]
+  for_each        = {for spec in var.keys: spec.name => spec}
+  name            = each.value.name
+  key_ring        = google_kms_key_ring.default.id
+  purpose         = each.value.purpose
+
+  version_template {
+    algorithm         = each.value.algorithm
+    protection_level  = each.value.protection_level
+  }
+}
+
 # Create secrets and allow the service to access them.
 resource "google_secret_manager_secret" "secrets" {
   depends_on  = [google_project_service.required]

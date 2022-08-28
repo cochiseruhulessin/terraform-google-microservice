@@ -105,6 +105,16 @@ variable "keyring_location" {
   type = string
 }
 
+variable "keys" {
+  type    = list(object({
+    protection_level = string
+    name = string
+    purpose = string
+    algorithm = string
+  }))
+  default = []
+}
+
 variable "locations" {
   type = list(string)
 }
