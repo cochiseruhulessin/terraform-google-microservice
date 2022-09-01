@@ -163,6 +163,18 @@ resource "google_kms_crypto_key" "pii" {
   }
 }
 
+resource "google_kms_crypto_key" "idx" {
+  depends_on      = [google_kms_key_ring.default]
+  name            = "idx"
+  key_ring        = google_kms_key_ring.default.id
+  purpose         = "MAC"
+
+  version_template {
+    algorithm         = "HMAC_SHA256"
+    protection_level  = "SOFTWARE"
+  }
+}
+
 resource "google_kms_crypto_key" "keys" {
   depends_on      = [google_kms_key_ring.default]
   for_each        = {for spec in var.keys: spec.name => spec}
@@ -321,6 +333,11 @@ resource "google_cloud_run_service" "default" {
         env {
           name  = "PII_ENCRYPTION_KEY"
           value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.pii.id}"
+        }
+
+        env {
+          name  = "PII_INDEX_KEY"
+          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.idx.id}"
         }
 
         env {
