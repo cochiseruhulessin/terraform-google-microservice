@@ -179,3 +179,9 @@ variable "with_dns" {
   type    = bool
   default = false
 }
+
+variable "with_data_encryption" {
+  type        = bool
+  default     = false
+  description = "If true, create an AES-256 encryption key for data-at-rest encryption."
+}
