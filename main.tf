@@ -266,12 +266,12 @@ resource "google_cloud_run_service" "default" {
 
         env {
           name  = "APP_ENCRYPTION_KEY"
-          value = "google://cloudkms.google.com/${google_kms_crypto_key.enc.id}"
+          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.enc.id}"
         }
 
         env {
           name  = "APP_SIGNING_KEY"
-          value = "google://cloudkms.google.com/${google_kms_crypto_key.sig.id}"
+          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.sig.id}"
         }
 
         env {
