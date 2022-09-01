@@ -151,6 +151,18 @@ resource "google_kms_crypto_key" "enc" {
   }
 }
 
+resource "google_kms_crypto_key" "pii" {
+  depends_on      = [google_kms_key_ring.default]
+  name            = "pii"
+  key_ring        = google_kms_key_ring.default.id
+  purpose         = "ENCRYPT_DECRYPT"
+
+  version_template {
+    algorithm         = "GOOGLE_SYMMETRIC_ENCRYPTION"
+    protection_level  = "SOFTWARE"
+  }
+}
+
 resource "google_kms_crypto_key" "keys" {
   depends_on      = [google_kms_key_ring.default]
   for_each        = {for spec in var.keys: spec.name => spec}
@@ -304,6 +316,11 @@ resource "google_cloud_run_service" "default" {
         env {
           name  = "HTTP_WORKERS"
           value = var.cpu_count
+        }
+
+        env {
+          name  = "PII_ENCRYPTION_KEY"
+          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.pii.id}"
         }
 
         env {
