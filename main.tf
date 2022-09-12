@@ -316,6 +316,11 @@ resource "google_cloud_run_service" "default" {
         }
 
         env {
+          name  = "GOOGLE_SERVICE_PROJECT"
+          value = local.project
+        }
+
+        env {
           name  = "GOOGLE_SERVICE_ACCOUNT_EMAIL"
           value = google_service_account.default.email
         }
