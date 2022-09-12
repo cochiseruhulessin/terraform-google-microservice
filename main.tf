@@ -290,12 +290,12 @@ resource "google_cloud_run_service" "default" {
 
         env {
           name  = "APP_ENCRYPTION_KEY"
-          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.enc.id}"
+          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.enc.id}?version=${var.encryption_key_version}"
         }
 
         env {
           name  = "APP_SIGNING_KEY"
-          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.sig.id}"
+          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.sig.id}?version=${var.signing_key_version}"
         }
 
         env {
@@ -332,12 +332,12 @@ resource "google_cloud_run_service" "default" {
 
         env {
           name  = "PII_ENCRYPTION_KEY"
-          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.pii.id}"
+          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.pii.id}?version=1"
         }
 
         env {
           name  = "PII_INDEX_KEY"
-          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.idx.id}"
+          value = "google://cloudkms.googleapis.com/${google_kms_crypto_key.idx.id}?version=1"
         }
 
         env {

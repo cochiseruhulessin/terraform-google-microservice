@@ -71,8 +71,13 @@ variable "dns_zone" {
 }
 
 variable "enable_cdn" {
-  type = bool
+  type    = bool
   default = false
+}
+
+variable "encryption_key_version" {
+  type    = number
+  default = 1
 }
 
 variable "events" {
@@ -153,6 +158,11 @@ variable "service_id" {
 
 variable "service_name" {
   type = string
+}
+
+variable "signing_key_version" {
+  type    = number
+  default = 1
 }
 
 variable "subdomain" {
