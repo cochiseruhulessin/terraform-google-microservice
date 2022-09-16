@@ -198,7 +198,7 @@ resource "google_secret_manager_secret" "secrets" {
   replication {
     user_managed {
       dynamic "replicas" {
-        for_each = toset(var.locations)
+        for_each = toset(var.secret_locations)
         content {
           location = replicas.key
         }

@@ -152,6 +152,10 @@ variable "secrets" {
   )
 }
 
+variable "secret_locations" {
+  type = list(string)
+}
+
 variable "service_id" {
   type = string
 }
