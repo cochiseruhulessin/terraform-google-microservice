@@ -326,6 +326,11 @@ resource "google_cloud_run_service" "default" {
         }
 
         env {
+          name  = "HTTP_ALLOWED_HOSTS"
+          value = local.service_domain
+        }
+
+        env {
           name  = "HTTP_LOGLEVEL"
           value = var.http_loglevel
         }
