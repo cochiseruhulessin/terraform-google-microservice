@@ -7,7 +7,7 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 data "google_pubsub_topic" "events" {
-  for_each  = var.events
+  for_each  = var.subscribes
   project   = var.host_project
   name      = each.key
 }
@@ -57,14 +57,14 @@ resource "google_pubsub_subscription" "commands" {
 # Create a subscription in the host project that pushed to the
 # specified endpoint.
 resource "random_string" "subscriptions" {
-  for_each  = var.events
+  for_each  = var.subscribes
   length    = 6
   special   = false
   upper     = false
 }
 
 resource "google_pubsub_subscription" "events" {
-  for_each                = var.events
+  for_each                = var.subscribes
   project                 = var.service_project
   topic                   = data.google_pubsub_topic.events[each.key].id
   name                    = "${var.service_id}-${random_string.subscriptions[each.key].result}"
@@ -86,8 +86,7 @@ resource "google_pubsub_subscription" "events" {
 }
 
 resource "google_pubsub_topic_iam_member" "events" {
-  depends_on    = [google_pubsub_subscription.events]
-  for_each      = var.events 
+  for_each      = var.publishes 
   project       = var.host_project
   topic         = each.key
   role          = "roles/pubsub.publisher"

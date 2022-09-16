@@ -501,8 +501,10 @@ module "pubsub" {
   endpoint        = "https://${local.service_domain}/.well-known/aorta"
   events          = var.events
   host_project    = var.project
+  publishes       = var.publishes
   services        = local.services
   service_account = google_service_account.default.email
   service_id      = var.service_id
   service_project = google_project.service[0].project_id
+  subscribes      = var.subscribes
 }

@@ -27,6 +27,11 @@ variable "host_project" {
   description = "The host project in which shared resources are maintained."
 }
 
+variable "publishes" {
+  type        = set(string)
+  default     = []
+}
+
 variable "services" {
   type = list(
     object({
@@ -50,4 +55,9 @@ variable "service_id" {
 variable "service_project" {
   type        = string
   description = "The service project in which the service is deployed."
+}
+
+variable "subscribes" {
+  type        = set(string)
+  default     = []
 }

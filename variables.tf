@@ -137,6 +137,12 @@ variable "project" {
   type    = string
 }
 
+variable "publishes" {
+  type        = set(string)
+  default     = []
+  description = "The set of events that this service publishes."
+}
+
 variable "pubsub_topic_prefix" {
   default = null
   type    = string
@@ -172,6 +178,12 @@ variable "signing_key_version" {
 variable "subdomain" {
   type    = string
   default = null
+}
+
+variable "subscribes" {
+  type        = set(string)
+  default     = []
+  description = "The set of events that this service subscribes to."
 }
 
 variable "variables" {
