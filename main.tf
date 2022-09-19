@@ -515,7 +515,7 @@ module "pubsub" {
 }
 
 
-output {
+output "service_account" {
   description = "The email address of the service account."
   value       = google_service_account.default.email
 }
