@@ -513,3 +513,9 @@ module "pubsub" {
   service_project = google_project.service[0].project_id
   subscribes      = var.subscribes
 }
+
+
+output {
+  description = "The email address of the service account."
+  value       = google_service_account.default.email
+}
