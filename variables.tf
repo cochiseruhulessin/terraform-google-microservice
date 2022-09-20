@@ -128,6 +128,11 @@ variable "org_id" {
   type = string
 }
 
+variable "ping_locations" {
+  type    = list(string)
+  default = ["europe-west1"]
+}
+
 variable "ping_schedule" {
   type    = string
   default = null

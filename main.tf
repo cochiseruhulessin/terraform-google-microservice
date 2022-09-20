@@ -56,6 +56,7 @@ resource "google_project_service" "required" {
   for_each = toset(
     concat([
       "cloudkms.googleapis.com",
+      "cloudscheduler.googleapis.com",
       "compute.googleapis.com",
       "dns.googleapis.com",
       "eventarc.googleapis.com",
@@ -518,4 +519,19 @@ module "pubsub" {
 output "service_account" {
   description = "The email address of the service account."
   value       = google_service_account.default.email
+}
+
+resource "google_cloud_scheduler_job" "keepalive" {
+  depends_on        = [google_project_service.required]
+  for_each          = toset((var.ping_schedule == null) ? [] : var.ping_locations)
+  project           = local.project
+  name              = "${var.service_id}-${random_string.project_suffix.result}-keepalive"
+  attempt_deadline  = "30s"
+  schedule          = var.ping_schedule
+  region            = each.key
+
+  http_target {
+    http_method = "GET"
+    uri         = "https://${local.service_domain}/.well-known/host-meta.json"
+  }
 }
