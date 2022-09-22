@@ -430,7 +430,10 @@ resource "google_compute_backend_service" "default" {
   timeout_sec = 30
   enable_cdn  = var.enable_cdn
   custom_response_headers = [
-    "Strict-Transport-Security: max-age=15552000; includeSubDomains"
+    "Referrer-Policy: no-referrer",
+    "Strict-Transport-Security: max-age=15552000; includeSubDomains",
+    "X-Content-Type-Options: nosniff",
+    "X-Frame-Options: SAMEORIGIN",
   ]
 
   dynamic "cdn_policy" {
