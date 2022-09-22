@@ -429,6 +429,9 @@ resource "google_compute_backend_service" "default" {
   port_name   = "http"
   timeout_sec = 30
   enable_cdn  = var.enable_cdn
+  custom_response_headers = [
+    "Strict-Transport-Security: max-age=15552000; includeSubDomains"
+  ]
 
   dynamic "cdn_policy" {
     for_each = (var.enable_cdn) ? [null] : []
