@@ -47,7 +47,7 @@ resource "random_string" "project_suffix" {
 resource "google_project" "service" {
   count           = (var.isolate) ? 1 : 0
   name            = var.service_name
-  project_id      = "${var.project}-${random_string.project_suffix.result}"
+  project_id      = "${coalesce(var.project_prefix, var.project)}-${random_string.project_suffix.result}"
   billing_account = var.billing_account
   org_id          = var.org_id
 }
@@ -521,12 +521,6 @@ module "pubsub" {
   subscribes      = var.subscribes
 }
 
-
-output "service_account" {
-  description = "The email address of the service account."
-  value       = google_service_account.default.email
-}
-
 resource "google_cloud_scheduler_job" "keepalive" {
   depends_on        = [google_project_service.required]
   for_each          = toset((var.ping_schedule == null) ? [] : var.ping_locations)
@@ -540,4 +534,14 @@ resource "google_cloud_scheduler_job" "keepalive" {
     http_method = "GET"
     uri         = "https://${local.service_domain}/.well-known/host-meta.json"
   }
+}
+
+output "service_account" {
+  description = "The email address of the service account."
+  value       = google_service_account.default.email
+}
+
+output "project" {
+  description = "The service project created for this deployment."
+  value       = local.project
 }

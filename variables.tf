@@ -142,6 +142,11 @@ variable "project" {
   type    = string
 }
 
+variable "project_prefix" {
+  type    = string
+  default = null
+}
+
 variable "publishes" {
   type        = set(string)
   default     = []
