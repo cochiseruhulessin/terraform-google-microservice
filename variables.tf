@@ -86,12 +86,6 @@ variable "events" {
   description = "The set of events that this service is interested in."
 }
 
-variable "gitlab_project" {
-  type        = string
-  default     = null
-  description = "The Gitlab project hosting the source code."
-}
-
 variable "http_loglevel" {
   type    = string
   default = "CRITICAL"
