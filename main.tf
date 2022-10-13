@@ -536,6 +536,16 @@ resource "google_cloud_scheduler_job" "keepalive" {
   }
 }
 
+output "docker_repository" {
+  description = "The Docker repository URL for the Cloud Run image."
+  value       = "${var.artifact_registry_location}-docker.pkg.dev/${var.artifact_registry_project}/${var.artifact_registry_name}/${var.service_id}"
+}
+
+output "service_id" {
+  description = "The service identifier."
+  value       = var.service_id
+}
+
 output "service_account" {
   description = "The email address of the service account."
   value       = google_service_account.default.email
