@@ -44,6 +44,10 @@ variable "datastore_location" {
   default = null
 }
 
+variable "datastore_namespace" {
+  type    = string
+}
+
 variable "default_log_bucket" {
   type    = string
   default = null

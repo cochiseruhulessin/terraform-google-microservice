@@ -312,6 +312,11 @@ resource "google_cloud_run_service" "default" {
         }
 
         env {
+          name  = "GOOGLE_DATASTORE_NAMESPACE"
+          value = var.datastore_namespace
+        }
+
+        env {
           name  = "GOOGLE_HOST_PROJECT"
           value = var.project
         }
