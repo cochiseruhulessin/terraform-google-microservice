@@ -39,11 +39,6 @@ variable "service_id" {
   type = string
 }
 
-variable "subdomain" {
-  type    = string
-  default = null
-}
-
 variable "suffix" {
   type = string
 }

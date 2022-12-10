@@ -22,24 +22,9 @@ variable "events" {
   description = "The set of events that this service is interested in."
 }
 
-variable "host_project" {
-  type        = string
-  description = "The host project in which shared resources are maintained."
-}
-
 variable "publishes" {
   type        = set(string)
   default     = []
-}
-
-variable "services" {
-  type = list(
-    object({
-      project   = string
-      name      = string
-      location  = string
-    })
-  )
 }
 
 variable "service_account" {

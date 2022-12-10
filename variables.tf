@@ -6,21 +6,6 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-variable "artifact_registry_location" {
-  type    = string
-  default = null
-}
-
-variable "artifact_registry_name" {
-  type    = string
-  default = null
-}
-
-variable "artifact_registry_project" {
-  type    = string
-  default = null
-}
-
 variable "base_domain" {
   type = string
 }
@@ -58,19 +43,21 @@ variable "default_log_location" {
   default = null
 }
 
+variable "dns_zone_name" {
+  default = null
+  type    = string
+}
+
+variable "dns_zone_project" {
+  default = null
+  type    = string
+}
+
 variable "deployers" {
   type = list(string)
 }
 
 variable "deployment_env" {
-  type = string
-}
-
-variable "dns_project" {
-  type = string
-}
-
-variable "dns_zone" {
   type = string
 }
 
@@ -124,6 +111,11 @@ variable "keys" {
   default = []
 }
 
+variable "loadbalancer" {
+  type    = bool
+  default = false
+}
+
 variable "locations" {
   type = list(string)
 }
@@ -142,13 +134,17 @@ variable "ping_schedule" {
   default = null
 }
 
+variable "platform" {
+  type        = string
+  description = "Specifies the deployment platform."
+}
+
 variable "project" {
   type    = string
 }
 
 variable "project_prefix" {
   type    = string
-  default = null
 }
 
 variable "publishes" {
@@ -203,21 +199,6 @@ variable "subscribes" {
 variable "variables" {
   type    = map(string)
   default = {}
-}
-
-variable "with_domain_map" {
-  type    = bool
-  default = false
-}
-
-variable "with_loadbalancer" {
-  type    = bool
-  default = false
-}
-
-variable "with_dns" {
-  type    = bool
-  default = false
 }
 
 variable "with_data_encryption" {
