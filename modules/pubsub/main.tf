@@ -14,18 +14,18 @@ data "google_pubsub_topic" "events" {
 
 # Create a topic and subscription for command messages issued by
 # this application.
-#resource "google_pubsub_topic" "commands" {
-#  project = var.service_project
-#  name    = "${var.service_id}.commands"
-#}
-#
-#resource "google_pubsub_topic_iam_member" "commands" {
-#  depends_on    = [google_pubsub_topic.commands]
-#  project       = google_pubsub_topic.commands.project
-#  topic         = "${var.service_id}.commands"
-#  role          = "roles/pubsub.publisher"
-#  member        = "serviceAccount:${var.service_account}"
-#}
+resource "google_pubsub_topic" "commands" {
+  project = var.service_project
+  name    = "${var.service_id}.commands"
+}
+
+resource "google_pubsub_topic_iam_member" "commands" {
+  depends_on    = [google_pubsub_topic.commands]
+  project       = google_pubsub_topic.commands.project
+  topic         = "${var.service_id}.commands"
+  role          = "roles/pubsub.publisher"
+  member        = "serviceAccount:${var.service_account}"
+}
 #
 #resource "random_string" "commands" {
 #  length    = 6
@@ -69,4 +69,8 @@ resource "google_pubsub_topic_iam_member" "events" {
   topic         = each.key
   role          = "roles/pubsub.publisher"
   member        = "serviceAccount:${var.service_account}"
+}
+
+output "command_topic" {
+  value = google_pubsub_topic.commands.name
 }

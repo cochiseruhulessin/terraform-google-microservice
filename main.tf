@@ -116,6 +116,7 @@ module "crypto" {
 
 module "cloudrun" {
   count               = (var.platform == "cloudrun") ? 1 : 0
+  command_topic       = module.pubsub.command_topic
   content_key         = module.crypto.content_key
   datastore_namespace = var.datastore_namespace
   deployers           = var.deployers
@@ -141,6 +142,7 @@ module "cloudrun" {
     google_project.service,
     google_project_service.required,
     module.crypto,
+    module.pubsub,
     module.secrets
   ]
 }
@@ -255,7 +257,14 @@ resource "google_cloud_scheduler_job" "keepalive" {
 
   pubsub_target {
     topic_name = google_pubsub_topic.keepalive.id
-    data       = base64encode("ping")
+    data       = base64encode(
+      jsonencode({
+        apiVersion  = "v1"
+        kind        = "Ping"
+        type        = "unimatrixone.io/command"
+        spec        = {}
+      })
+    )
   }
 }
 
@@ -263,3 +272,21 @@ resource "google_cloud_scheduler_job" "keepalive" {
 #   description = "The Docker repository URL for the Cloud Run image."
 #   value       = "${var.artifact_registry_location}-docker.pkg.dev/${var.artifact_registry_project}/${var.artifact_registry_name}/${var.service_id}"
 # }
+resource "random_string" "beats" {
+  count     = length(var.beats)
+  length    = 6
+  special   = false
+  upper     = false
+}
+
+module "beats" {
+  count         = length(var.beats)
+  depends_on    = [module.pubsub]
+  source        = "./modules/beats"
+  project       = local.services_project_id
+  command_name  = var.beats[count.index].command_name
+  command_topic = module.pubsub.command_topic
+  name          = "beat-${random_string.beats[count.index].result}"
+  params        = var.beats[count.index].params
+  schedule      = var.beats[count.index].schedule
+}

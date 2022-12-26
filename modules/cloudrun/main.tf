@@ -6,6 +6,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+variable "command_topic" { type = string }
 variable "content_key" { type = string }
 variable "cpu_count" { default = 1}
 variable "datastore_namespace" { type = string }
@@ -110,6 +111,11 @@ resource "google_cloud_run_service" "default" {
               }
             }
           }
+        }
+
+        env {
+          name  = "APP_NAME"
+          value = var.service_id
         }
 
         env {
@@ -303,6 +309,45 @@ resource "google_eventarc_trigger" "events" {
   transport {
     pubsub {
       topic = each.key
+    }
+  }
+}
+
+# Create Eventarc trigger for commands
+resource "random_string" "commands" {
+  length      = 6
+  special     = false
+  upper       = false
+}
+
+data "google_pubsub_topic" "commands" {
+  project = var.project
+  name    = var.command_topic
+}
+
+resource "google_eventarc_trigger" "commands" {
+  project         = google_cloud_run_service.default[local.primary_location].project
+  name            = "commands-${random_string.commands.result}"
+  location        = local.primary_location
+  service_account = data.google_service_account.default.email
+  depends_on      = [google_cloud_run_service.default]
+
+  matching_criteria {
+    attribute = "type"
+    value = "google.cloud.pubsub.topic.v1.messagePublished"
+  }
+
+  destination {
+    cloud_run_service {
+      service = google_cloud_run_service.default[local.primary_location].name
+      region  = google_cloud_run_service.default[local.primary_location].location
+      path    = "/.well-known/aorta"
+    }
+  }
+
+  transport {
+    pubsub {
+      topic = data.google_pubsub_topic.commands.name
     }
   }
 }

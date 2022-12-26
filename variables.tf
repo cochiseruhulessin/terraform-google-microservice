@@ -10,6 +10,17 @@ variable "base_domain" {
   type = string
 }
 
+variable "beats" {
+  type = list(
+    object({
+      command_name  = string
+      params        = map(any)
+      schedule      = string
+    })
+  )
+  default = []
+}
+
 variable "billing_account" {
   type = string
 }
