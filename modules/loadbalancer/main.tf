@@ -70,7 +70,7 @@ resource "google_compute_url_map" "default" {
       default_service = google_compute_backend_bucket.frontend[var.service_domain].id
 
       path_rule {
-        paths   = ["/api"]
+        paths   = ["/api", "/api/*"]
         service = var.backend_id
       }
     }
