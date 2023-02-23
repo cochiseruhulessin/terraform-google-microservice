@@ -6,10 +6,75 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+# Create a bucket to hold the assets and a corresponding backend
+# service with the proper headers configured.
+resource "google_storage_bucket" "frontend" {
+  count                       = (var.frontend) ? 1 : 0
+  project                     = var.project
+  name                        = var.service_domain
+  location                    = "EU"
+  uniform_bucket_level_access = true
+
+  website {
+    main_page_suffix = "index.html"
+    not_found_page = "index.html"
+  }
+}
+
+resource "google_storage_bucket_iam_binding" "frontend" {
+  depends_on = [google_storage_bucket.frontend]
+  for_each = {for spec in google_storage_bucket.frontend: spec.name => spec}
+  bucket = each.value.name
+  role = "roles/storage.legacyObjectReader"
+  members = ["allUsers"]
+}
+
+resource "google_compute_backend_bucket" "frontend" {
+  depends_on  = [google_storage_bucket.frontend]
+  for_each    = {for spec in google_storage_bucket.frontend: spec.name => spec}
+  project     = var.project
+  name        = "${var.service_id}-frontend"
+  description = "Backend bucket for ${var.service_id}"
+  bucket_name = each.key
+  enable_cdn  = false
+
+  # We don't trust the browser code, but this still leaves a too large
+  # attack surface (TODO).
+  custom_response_headers = [
+    #"Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'",
+    "Referrer-Policy: no-referrer",
+    "Strict-Transport-Security: max-age=15552000; includeSubDomains",
+    "X-Content-Type-Options: nosniff",
+    "X-Frame-Options: SAMEORIGIN",
+  ]
+}
+
 resource "google_compute_url_map" "default" {
   project         = var.project
   name            = "service-${var.service_id}"
-  default_service = var.backend_id
+  default_service = (var.frontend) ? google_compute_backend_bucket.frontend[var.service_domain].id : var.backend_id
+
+  dynamic "host_rule" {
+    for_each = (var.frontend == false) ? toset([]) : toset([var.service_domain])
+    content {
+      hosts = [host_rule.key]
+      path_matcher = "default"
+    }
+  }
+
+  dynamic "path_matcher" {
+    for_each = (var.frontend == false) ? toset([]) : toset([var.service_domain])
+    content {
+      name = "default"
+      default_service = google_compute_backend_bucket.frontend[var.service_domain].id
+
+      path_rule {
+        paths   = ["/api"]
+        service = var.backend_id
+      }
+    }
+  }
 
   lifecycle {
     create_before_destroy = true

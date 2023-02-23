@@ -23,6 +23,10 @@ variable "enable_cdn" {
   default = false
 }
 
+variable "frontend" {
+  type = bool
+}
+
 variable "locations" {
   type = list(string)
 }

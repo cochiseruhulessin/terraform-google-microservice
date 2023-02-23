@@ -88,6 +88,11 @@ variable "events" {
   description = "The set of events that this service is interested in."
 }
 
+variable "frontend" {
+  default     = false
+  description = "Indicates if the service is a backend-for-frontend"
+}
+
 variable "http_loglevel" {
   type    = string
   default = "CRITICAL"

@@ -209,9 +209,13 @@ module "datastore" {
 # }
 
 module "loadbalancer" {
-  depends_on      = [google_project_service.required, module.cloudrun]
+  depends_on      = [
+    google_project_service.required,
+    module.cloudrun
+  ]
   count           = (var.loadbalancer) ? 1 : 0
   backend_id      = module.cloudrun[0].backend_id
+  frontend        = var.frontend
   source          = "./modules/loadbalancer"
   dns_project     = var.dns_zone_project
   dns_zone        = var.dns_zone_name
