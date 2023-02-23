@@ -72,6 +72,12 @@ resource "google_compute_url_map" "default" {
       path_rule {
         paths   = ["/api", "/api/*"]
         service = var.backend_id
+
+        route_action {
+          url_rewrite {
+            path_prefix_rewrite = "/"
+          }
+        }
       }
     }
   }
