@@ -122,6 +122,7 @@ module "cloudrun" {
   deployers           = var.deployers
   deployment_env      = var.deployment_env
   encryption_key      = module.crypto.encryption_key
+  frontend            = var.frontend
   http_loglevel       = var.http_loglevel
   index_key           = module.crypto.index_key
   ingress             = var.ingress

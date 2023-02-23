@@ -14,6 +14,7 @@ variable "deployers" { type = list(string) }
 variable "deployment_env" { type = string }
 variable "enable_cdn" { default = false }
 variable "encryption_key" { type = string }
+variable "frontend" { type = bool }
 variable "http_loglevel" { type = string }
 variable "index_key" { type = string  }
 variable "ingress" { type = string  }
@@ -31,6 +32,13 @@ variable "variables" {}
 
 locals {
   primary_location = var.locations[0]
+  variables = merge(
+    var.variables,
+
+    # TODO: This is quite Python specific and should be named to
+    # a more generic environment variable.
+    (var.frontend) ? {"ASGI_ROOT_PATH"="/api"} : {}
+  )
 }
 
 data "google_service_account" "default" {
@@ -93,10 +101,10 @@ resource "google_cloud_run_service" "default" {
         }
 
         dynamic "env" {
-          for_each = toset(keys(var.variables))
+          for_each = toset(keys(local.variables))
           content {
             name  = env.key
-            value = var.variables[env.key]
+            value = local.variables[env.key]
           }
         }
 
