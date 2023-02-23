@@ -36,8 +36,10 @@ locals {
     var.variables,
 
     # TODO: This is quite Python specific and should be named to
-    # a more generic environment variable.
-    (var.frontend) ? {"ASGI_ROOT_PATH"="/api"} : {}
+    # a more generic environment variable. It exists for legacy
+    # compatibility.
+    (var.frontend) ? {"ASGI_ROOT_PATH"="/api"} : {},
+    (var.frontend) ? {"HTTP_MOUNT_PATH"="/api"} : {}
   )
 }
 
