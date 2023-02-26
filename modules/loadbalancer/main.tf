@@ -58,7 +58,7 @@ resource "google_compute_url_map" "default" {
   dynamic "host_rule" {
     for_each = (var.frontend == false) ? toset([]) : toset([var.service_domain])
     content {
-      hosts = [host_rule.key]
+      hosts = concat([host_rule.key], var.accepted_hosts)
       path_matcher = "default"
     }
   }

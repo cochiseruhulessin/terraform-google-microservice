@@ -214,6 +214,7 @@ module "loadbalancer" {
     google_project_service.required,
     module.cloudrun
   ]
+  accepted_hosts  = var.accepted_hosts
   count           = (var.loadbalancer) ? 1 : 0
   backend_id      = module.cloudrun[0].backend_id
   frontend        = var.frontend
