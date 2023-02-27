@@ -51,12 +51,65 @@ resource "google_secret_manager_secret_iam_binding" "secretAccessor" {
   members     = ["serviceAccount:${var.service_account}"]
 }
 
-output "secrets" {
-  value = [
-    for name, secret in var.secrets: {
-      name       = name,
-      secret     = secret,
-      project_id = data.google_project.svc.number
+resource "google_secret_manager_secret" "secret-key" {
+  project     = var.project
+  secret_id   = "app-secret-key"
+
+  replication {
+    user_managed {
+      dynamic "replicas" {
+        for_each = toset(var.locations)
+        content {
+          location = replicas.key
+        }
+      }
     }
-  ]
+  }
+}
+
+resource "time_rotating" "secret-key" {
+  rotation_days = 90
+}
+
+resource "random_id" "secret-key" {
+  keepers = {
+    rotation_time = time_rotating.secret-key.rotation_rfc3339
+  }
+
+  byte_length = 32
+}
+
+resource "google_secret_manager_secret_version" "secret-key" {
+  secret      = google_secret_manager_secret.secret-key.id
+  secret_data = random_id.secret-key.hex
+
+  lifecycle {
+    ignore_changes = [enabled, secret_data]
+  }
+}
+
+resource "google_secret_manager_secret_iam_binding" "secret-key" {
+  project     = google_secret_manager_secret.secret-key.project
+  secret_id   = google_secret_manager_secret.secret-key.secret_id
+  role        = "roles/secretmanager.secretAccessor"
+  members     = ["serviceAccount:${var.service_account}"]
+}
+
+output "secrets" {
+  value = concat(
+    [
+      for name, secret in var.secrets: {
+        name       = name,
+        secret     = secret,
+        project_id = data.google_project.svc.number
+      }
+    ],
+    [
+      {
+        name        = "SECRET_KEY"
+        secret      = google_secret_manager_secret.secret-key.secret_id
+        project_id  = data.google_project.svc.number
+      }
+    ]
+  )
 }
