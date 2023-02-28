@@ -16,16 +16,32 @@ data "google_pubsub_topic" "events" {
 # this application.
 resource "google_pubsub_topic" "commands" {
   project = var.service_project
-  name    = "${var.service_id}.commands"
+  name    = "${var.project_prefix}.commands.${var.service_id}"
 }
 
 resource "google_pubsub_topic_iam_member" "commands" {
   depends_on    = [google_pubsub_topic.commands]
   project       = google_pubsub_topic.commands.project
-  topic         = "${var.service_id}.commands"
+  topic         = google_pubsub_topic.commands.name
   role          = "roles/pubsub.publisher"
   member        = "serviceAccount:${var.service_account}"
 }
+
+# Create a topic and subscription for errored messages.
+resource "google_pubsub_topic" "retrying" {
+  project = var.service_project
+  name    = "${var.project_prefix}.retry.${var.service_id}"
+}
+
+resource "google_pubsub_topic_iam_member" "retrying" {
+  depends_on    = [google_pubsub_topic.retrying]
+  project       = google_pubsub_topic.retrying.project
+  topic         = google_pubsub_topic.retrying.name
+  role          = "roles/pubsub.publisher"
+  member        = "serviceAccount:${var.service_account}"
+}
+
+
 #
 #resource "random_string" "commands" {
 #  length    = 6

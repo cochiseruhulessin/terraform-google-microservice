@@ -22,6 +22,10 @@ variable "events" {
   description = "The set of events that this service is interested in."
 }
 
+variable "project_prefix" {
+  type        = string
+}
+
 variable "publishes" {
   type        = set(string)
   default     = []

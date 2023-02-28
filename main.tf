@@ -241,6 +241,7 @@ module "pubsub" {
   audience        = "https://${local.service_domain}/.well-known/aorta"
   endpoint        = "https://${local.service_domain}/.well-known/aorta"
   events          = var.events
+  project_prefix  = var.project_prefix
   publishes       = var.publishes
   service_account = google_service_account.default.email
   service_id      = var.service_id
