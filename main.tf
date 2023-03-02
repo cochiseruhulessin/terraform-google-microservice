@@ -100,6 +100,16 @@ resource "google_service_account" "default" {
   display_name  = var.service_name
 }
 
+resource "google_project_iam_member" "logging" {
+  for_each = toset([
+    local.services_project_id,
+    google_project.service.project_id
+  ])
+  project = each.key
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.default.email}"
+}
+
 module "crypto" {
   source          = "./modules/kms"
   location        = var.keyring_location
