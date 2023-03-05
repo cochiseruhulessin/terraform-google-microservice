@@ -101,11 +101,14 @@ resource "google_service_account" "default" {
 }
 
 resource "google_project_iam_member" "logging" {
-  for_each = toset([
-    local.services_project_id,
-    google_project.service.project_id
-  ])
-  project = each.key
+  depends_on = [google_project.service]
+  project = google_project.service.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.default.email}"
+}
+
+resource "google_project_iam_member" "logging-public" {
+  project = local.services_project_id
   role    = "roles/logging.logWriter"
   member  = "serviceAccount:${google_service_account.default.email}"
 }
