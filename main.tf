@@ -142,6 +142,7 @@ module "cloudrun" {
   invokers            = var.invokers
   locations           = var.locations
   project             = local.services_project_id
+  project_prefix      = var.project_prefix
   source              = "./modules/cloudrun"
   secrets             = module.secrets.secrets
   service_account     = google_service_account.default.name

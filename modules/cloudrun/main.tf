@@ -21,6 +21,7 @@ variable "ingress" { type = string  }
 variable "invokers" {}
 variable "locations" { type = list(string) }
 variable "project" { type = string }
+variable "project_prefix" { type = string }
 variable "secrets" { default = [] }
 variable "service_account" { type = string }
 variable "service_domain" { type = string }
@@ -399,6 +400,45 @@ resource "google_eventarc_trigger" "keepalive" {
   transport {
     pubsub {
       topic = data.google_pubsub_topic.keepalive.name
+    }
+  }
+}
+
+# Trigger on the global commands topic
+resource "random_string" "commands-global" {
+  length      = 6
+  special     = false
+  upper       = false
+  depends_on  = [google_cloud_run_service.default]
+}
+
+data "google_pubsub_topic" "commands-global" {
+  project = var.project
+  name    = "${var.project_prefix}.commands"
+}
+
+resource "google_eventarc_trigger" "commands-global" {
+  project         = google_cloud_run_service.default[local.primary_location].project
+  name            = "commands-global-${random_string.commands-global.result}"
+  location        = local.primary_location
+  service_account = data.google_service_account.default.email
+
+  matching_criteria {
+    attribute = "type"
+    value = "google.cloud.pubsub.topic.v1.messagePublished"
+  }
+
+  destination {
+    cloud_run_service {
+      service = google_cloud_run_service.default[local.primary_location].name
+      region  = google_cloud_run_service.default[local.primary_location].location
+      path    = "/.well-known/aorta"
+    }
+  }
+
+  transport {
+    pubsub {
+      topic = data.google_pubsub_topic.commands-global.name
     }
   }
 }
