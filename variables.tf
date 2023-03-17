@@ -12,6 +12,12 @@ variable "accepted_hosts" {
   description = "Additional domains that are accepted by the service load balancer."
 }
 
+variable "backend_paths" {
+  default     = null
+  description = "Paths that must be routed to the backend. Use in combination with `frontend=true`."
+  type        = list(string)
+}
+
 variable "base_domain" {
   type = string
 }
@@ -192,6 +198,12 @@ variable "secrets" {
 
 variable "secret_locations" {
   type = list(string)
+}
+
+variable "service_domain" {
+  default     = null
+  description = "Overrides the domain constructed from `service_id` and `base_domain`."
+  type        = string
 }
 
 variable "service_id" {

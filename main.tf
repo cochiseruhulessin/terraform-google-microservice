@@ -22,7 +22,7 @@ locals {
   #  {location = spec.location, name = spec.name, project = spec.project}
   #]
   service_account   = "${var.project_prefix}-${var.service_id}"
-  service_domain    = "${var.service_id}.${var.base_domain}"
+  service_domain    = coalesce(var.service_domain, "${var.service_id}.${var.base_domain}")
   #suffix            = {
   #  for location, spec in random_string.locations:
   #  location => spec.result
@@ -146,7 +146,7 @@ module "cloudrun" {
   source              = "./modules/cloudrun"
   secrets             = module.secrets.secrets
   service_account     = google_service_account.default.name
-  service_domain      = "${var.subdomain}.${var.base_domain}"
+  service_domain      = local.service_domain
   service_id          = var.service_id
   service_project     = google_project.service.project_id
   signing_key         = module.crypto.signing_key
@@ -229,6 +229,7 @@ module "loadbalancer" {
     module.cloudrun
   ]
   accepted_hosts  = var.accepted_hosts
+  backend_paths   = var.backend_paths
   count           = (var.loadbalancer) ? 1 : 0
   backend_id      = module.cloudrun[0].backend_id
   frontend        = var.frontend

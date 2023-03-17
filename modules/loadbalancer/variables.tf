@@ -14,6 +14,10 @@ variable "backend_id" {
   type = string
 }
 
+variable "backend_paths" {
+  type = list(string)
+}
+
 variable "dns_project" {
   type = string
 }
