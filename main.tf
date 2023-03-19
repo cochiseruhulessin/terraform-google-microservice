@@ -128,6 +128,7 @@ module "crypto" {
 }
 
 module "cloudrun" {
+  backend_paths       = var.backend_paths
   count               = (var.platform == "cloudrun") ? 1 : 0
   command_topic       = module.pubsub.command_topic
   content_key         = module.crypto.content_key

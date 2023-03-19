@@ -6,6 +6,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+variable "backend_paths" { type = list(string) }
 variable "command_topic" { type = string }
 variable "content_key" { type = string }
 variable "cpu_count" { default = 1}
@@ -39,8 +40,8 @@ locals {
     # TODO: This is quite Python specific and should be named to
     # a more generic environment variable. It exists for legacy
     # compatibility.
-    (var.frontend) ? {"ASGI_ROOT_PATH"="/api"} : {},
-    (var.frontend) ? {"HTTP_MOUNT_PATH"="/api"} : {}
+    (var.frontend && var.backend_paths == []) ? {"ASGI_ROOT_PATH"="/api"} : {},
+    (var.frontend && var.backend_paths == []) ? {"HTTP_MOUNT_PATH"="/api"} : {}
   )
 }
 
@@ -406,43 +407,43 @@ resource "google_eventarc_trigger" "keepalive" {
 }
 
 # Trigger on the global commands topic
-resource "random_string" "commands-global" {
-  length      = 6
-  special     = false
-  upper       = false
-  depends_on  = [google_cloud_run_service.default]
-}
-
-data "google_pubsub_topic" "commands-global" {
-  project = var.project
-  name    = "${var.project_prefix}.commands"
-}
-
-resource "google_eventarc_trigger" "commands-global" {
-  project         = google_cloud_run_service.default[local.primary_location].project
-  name            = "commands-global-${random_string.commands-global.result}"
-  location        = local.primary_location
-  service_account = data.google_service_account.default.email
-
-  matching_criteria {
-    attribute = "type"
-    value = "google.cloud.pubsub.topic.v1.messagePublished"
-  }
-
-  destination {
-    cloud_run_service {
-      service = google_cloud_run_service.default[local.primary_location].name
-      region  = google_cloud_run_service.default[local.primary_location].location
-      path    = "/.well-known/aorta"
-    }
-  }
-
-  transport {
-    pubsub {
-      topic = data.google_pubsub_topic.commands-global.name
-    }
-  }
-}
+#resource "random_string" "commands-global" {
+#  length      = 6
+#  special     = false
+#  upper       = false
+#  depends_on  = [google_cloud_run_service.default]
+#}
+#
+#data "google_pubsub_topic" "commands-global" {
+#  project = var.project
+#  name    = "${var.project_prefix}.commands"
+#}
+#
+#resource "google_eventarc_trigger" "commands-global" {
+#  project         = google_cloud_run_service.default[local.primary_location].project
+#  name            = "commands-global-${random_string.commands-global.result}"
+#  location        = local.primary_location
+#  service_account = data.google_service_account.default.email
+#
+#  matching_criteria {
+#    attribute = "type"
+#    value = "google.cloud.pubsub.topic.v1.messagePublished"
+#  }
+#
+#  destination {
+#    cloud_run_service {
+#      service = google_cloud_run_service.default[local.primary_location].name
+#      region  = google_cloud_run_service.default[local.primary_location].location
+#      path    = "/.well-known/aorta"
+#    }
+#  }
+#
+#  transport {
+#    pubsub {
+#      topic = data.google_pubsub_topic.commands-global.name
+#    }
+#  }
+#}
 
 output "backend_id" {
   value = google_compute_backend_service.default.id
