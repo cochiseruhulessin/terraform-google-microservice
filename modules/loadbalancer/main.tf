@@ -70,12 +70,12 @@ resource "google_compute_url_map" "default" {
       default_service = google_compute_backend_bucket.frontend[var.service_domain].id
 
       path_rule {
-        paths   = (var.backend_paths == null || var.backend_paths == []) ? var.backend_paths : ["/api", "/api/*"]
+        paths   = (length(var.backend_paths) > 0) ? var.backend_paths : ["/api", "/api/*"]
         service = var.backend_id
 
         route_action {
           url_rewrite {
-            path_prefix_rewrite = (var.backend_paths == null || var.backend_paths == []) ? null : "/"
+            path_prefix_rewrite = (length(var.backend_paths) > 0) ? null : "/"
           }
         }
       }
