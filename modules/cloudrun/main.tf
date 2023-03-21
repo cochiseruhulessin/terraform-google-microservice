@@ -177,6 +177,7 @@ resource "google_cloud_run_service" "default" {
           value = var.service_domain
         }
 
+        # TODO: Deprecate this.
         env {
           name  = "HTTP_LOGLEVEL"
           value = var.http_loglevel
@@ -185,6 +186,11 @@ resource "google_cloud_run_service" "default" {
         env {
           name  = "HTTP_WORKERS"
           value = var.cpu_count
+        }
+
+        env {
+          name  = "LOG_LEVEL"
+          value = var.http_loglevel
         }
 
         env {
