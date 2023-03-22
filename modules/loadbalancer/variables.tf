@@ -26,6 +26,11 @@ variable "dns_zone" {
   type = string
 }
 
+variable "domains" {
+  default     = []
+  type        = list(string)
+}
+
 variable "enable_cdn" {
   type    = bool
   default = false

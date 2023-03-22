@@ -102,7 +102,7 @@ resource "google_compute_managed_ssl_certificate" "default" {
   }
 
   managed {
-    domains = ["${var.service_domain}."]
+    domains = concat(["${var.service_domain}."], var.domains)
   }
 }
 

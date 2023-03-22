@@ -243,6 +243,7 @@ module "loadbalancer" {
   source          = "./modules/loadbalancer"
   dns_project     = var.dns_zone_project
   dns_zone        = var.dns_zone_name
+  domains         = var.domains
   locations       = var.locations
   project         = local.services_project_id
   service_domain  = local.service_domain

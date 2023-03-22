@@ -89,6 +89,12 @@ variable "enable_cdn" {
   default = false
 }
 
+variable "domains" {
+  default     = []
+  description = "Additional domains accepted by the load balancer."
+  type        = list(string)
+}
+
 variable "encryption_key_version" {
   type    = number
   default = 1
