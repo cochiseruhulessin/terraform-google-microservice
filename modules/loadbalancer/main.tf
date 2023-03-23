@@ -56,7 +56,7 @@ resource "google_compute_url_map" "default" {
   default_service = (var.frontend) ? google_compute_backend_bucket.frontend[var.service_domain].id : var.backend_id
 
   dynamic "host_rule" {
-    for_each = (var.frontend == false) ? toset([]) : toset([var.service_domain])
+    for_each = (var.frontend == false) ? toset([]) : toset(concat([var.service_domain], var.domains))
     content {
       hosts = concat([host_rule.key], var.accepted_hosts)
       path_matcher = "default"
