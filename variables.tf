@@ -225,6 +225,12 @@ variable "signing_key_version" {
   default = 1
 }
 
+variable "storage_bucket" {
+  description = "Non-public storage bucket used by the application."
+  default     = null
+  type        = string
+}
+
 variable "subdomain" {
   type    = string
   default = null

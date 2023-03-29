@@ -133,6 +133,14 @@ module "crypto" {
   ]
 }
 
+module "storage" {
+  count             = (var.storage_bucket != null) ? 1 : 0
+  source            = "./modules/storage"
+  bucket_name       = var.storage_bucket
+  bucket_location   = "EU"
+  project           = google_project.service.project_id
+}
+
 module "cloudrun" {
   backend_paths       = var.backend_paths
   count               = (var.platform == "cloudrun") ? 1 : 0
@@ -157,6 +165,7 @@ module "cloudrun" {
   service_id          = var.service_id
   service_project     = google_project.service.project_id
   signing_key         = module.crypto.signing_key
+  storage_bucket      = (var.storage_bucket != null) ? module.storage[0].bucket_name : null
   subscribes          = var.subscribes
   variables           = var.variables
 
@@ -165,7 +174,8 @@ module "cloudrun" {
     google_project_service.required,
     module.crypto,
     module.pubsub,
-    module.secrets
+    module.secrets,
+    module.storage
   ]
 }
 

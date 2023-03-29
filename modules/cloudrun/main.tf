@@ -29,6 +29,7 @@ variable "service_domain" { type = string }
 variable "service_id" { type = string }
 variable "signing_key" { type = string }
 variable "service_project" { type = string }
+variable "storage_bucket" { type = string }
 variable "subscribes" {}
 variable "variables" {}
 
@@ -41,7 +42,8 @@ locals {
     # a more generic environment variable. It exists for legacy
     # compatibility.
     (var.frontend && length(var.backend_paths) == 0) ? {"ASGI_ROOT_PATH"="/api"} : {},
-    (var.frontend && length(var.backend_paths) == 0) ? {"HTTP_MOUNT_PATH"="/api"} : {}
+    (var.frontend && length(var.backend_paths) == 0) ? {"HTTP_MOUNT_PATH"="/api"} : {},
+    (var.storage_bucket != null) ? {"APP_STORAGE_BUCKET"=var.storage_bucket} : {}
   )
 }
 
