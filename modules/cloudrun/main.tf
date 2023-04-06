@@ -91,12 +91,36 @@ resource "google_cloud_run_service" "default" {
       container_concurrency = 100
       service_account_name  = data.google_service_account.default.email
 
+      dynamic "volumes" {
+        for_each = {for spec in var.secrets: spec.name => spec if try(spec.mount, null) != null}
+        content {
+          name = volumes.value.secret
+
+          secret {
+            secret_name   = volumes.value.secret
+            default_mode  = "0400"
+            items {
+              key   = "latest"
+              path  = volumes.value.mount
+            }
+          }
+        }
+      }
+
       containers {
         image = "us-docker.pkg.dev/cloudrun/container/hello"
 
         ports {
           name            = "http1"
           container_port  = 8000
+        }
+
+        dynamic "volume_mounts" {
+          for_each = {for k, v in var.secrets: k => v if try(v.mount, null) != null}
+          content {
+            mount_path  = "/var/run/secrets"
+            name        = volume_mounts.value.secret
+          }
         }
 
         resources {
@@ -115,7 +139,15 @@ resource "google_cloud_run_service" "default" {
         }
 
         dynamic "env" {
-          for_each = var.secrets
+          for_each = {for k, v in var.secrets: k => v if try(v.mount, null) != null}
+          content {
+            name  = env.value.name
+            value = "/var/run/secrets/${env.value.mount}"
+          }
+        }
+
+        dynamic "env" {
+          for_each = {for k, v in var.secrets: k => v if try(v.mount, null) == null}
           content {
             name = env.value.name
             value_from {

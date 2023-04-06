@@ -19,7 +19,7 @@ data "google_project" "svc" {
 resource "google_secret_manager_secret" "secrets" {
   for_each    = var.secrets
   project     = var.project
-  secret_id   = each.value
+  secret_id   = each.value.secret
 
   replication {
     user_managed {
@@ -36,7 +36,7 @@ resource "google_secret_manager_secret" "secrets" {
 resource "google_secret_manager_secret_version" "initial" {
   for_each    = var.secrets
   secret      = google_secret_manager_secret.secrets[each.key].id
-  secret_data = "changeme"
+  secret_data = try(each.value.initial, "changeme")
 
   lifecycle {
     ignore_changes = [enabled, secret_data]
@@ -98,10 +98,11 @@ resource "google_secret_manager_secret_iam_binding" "secret-key" {
 output "secrets" {
   value = concat(
     [
-      for name, secret in var.secrets: {
-        name       = name,
-        secret     = secret,
-        project_id = data.google_project.svc.number
+      for name, spec in var.secrets: {
+        name       = spec.name,
+        secret     = spec.secret,
+        project_id = data.google_project.svc.number,
+        mount      = try(spec.mount, null)
       }
     ],
     [

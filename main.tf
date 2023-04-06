@@ -27,7 +27,7 @@ locals {
   #  for location, spec in random_string.locations:
   #  location => spec.result
   #}
-  secrets             = {for spec in var.secrets: spec.name => spec.secret}
+  secrets             = {for spec in var.secrets: spec.name => spec}
   services_project_id = "${var.project}-svc"
   triggers            = {
     for params in setproduct(toset(var.locations), toset(var.events)):
@@ -100,6 +100,25 @@ resource "google_service_account" "default" {
   display_name  = var.service_name
 }
 
+resource "google_project_iam_member" "token-creator" {
+  project = local.services_project_id
+  role    = "roles/iam.serviceAccountTokenCreator"
+  member  = "serviceAccount:${google_service_account.default.email}"
+}
+
+resource "time_rotating" "service-account" {
+  rotation_days = 30
+}
+
+resource "google_service_account_key" "default" {
+  count               = (var.mount_service_account_key) ? 1 : 0
+  service_account_id  = google_service_account.default.name
+
+  keepers = {
+    rotation_time = time_rotating.service-account.rotation_rfc3339
+  }
+}
+
 resource "google_project_iam_member" "logging" {
   depends_on = [google_project.service]
   project = google_project.service.project_id
@@ -139,6 +158,7 @@ module "storage" {
   bucket_name       = var.storage_bucket
   bucket_location   = "EU"
   project           = google_project.service.project_id
+  service_account   = google_service_account.default.email
 }
 
 module "cloudrun" {
@@ -183,9 +203,23 @@ module "secrets" {
   source          = "./modules/secrets"
   locations       = var.secret_locations
   project         = google_project.service.project_id
-  secrets         = local.secrets
   service_account = google_service_account.default.email
-  depends_on      = [google_service_account.default]
+  secrets         = merge(
+    local.secrets,
+    (var.mount_service_account_key != true) ? {} : {
+      GOOGLE_APPLICATION_CREDENTIALS = {
+        name      = "GOOGLE_APPLICATION_CREDENTIALS",
+        secret    = "google-application-credentials",
+        initial   = base64decode(google_service_account_key.default[0].private_key),
+        mount     = "service-account.json"
+      }
+    }
+  )
+
+  depends_on      = [
+    google_service_account.default,
+    google_service_account_key.default
+  ]
 }
 
 # resource "google_kms_crypto_key" "keys" {

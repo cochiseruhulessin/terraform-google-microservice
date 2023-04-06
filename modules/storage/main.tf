@@ -9,6 +9,7 @@
 variable "bucket_name" { type = string }
 variable "bucket_location" { type = string}
 variable "project" { type = string }
+variable "service_account" { type = string }
 
 
 resource "google_storage_bucket" "app" {
@@ -18,6 +19,12 @@ resource "google_storage_bucket" "app" {
   project                     = var.project
   public_access_prevention    = "enforced"
   uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket_iam_member" "member" {
+  bucket = google_storage_bucket.app.name
+  role = "roles/storage.admin"
+  member = "serviceAccount:${var.service_account}"
 }
 
 output "bucket_name" {

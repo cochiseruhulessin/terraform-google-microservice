@@ -145,6 +145,11 @@ variable "keys" {
   default = []
 }
 
+variable "mount_service_account_key" {
+  type    = bool
+  default = false
+}
+
 variable "loadbalancer" {
   type    = bool
   default = false
