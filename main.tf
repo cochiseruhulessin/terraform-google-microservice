@@ -157,6 +157,7 @@ module "storage" {
   source            = "./modules/storage"
   bucket_name       = var.storage_bucket
   bucket_location   = "EU"
+  domains           = concat(var.domains, (var.service_domain != null) ? [var.service_domain] : [])
   project           = google_project.service.project_id
   service_account   = google_service_account.default.email
 }

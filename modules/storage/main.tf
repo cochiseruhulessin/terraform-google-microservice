@@ -8,6 +8,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 variable "bucket_name" { type = string }
 variable "bucket_location" { type = string}
+variable "domains" { type = list(string) }
 variable "project" { type = string }
 variable "service_account" { type = string }
 
@@ -19,6 +20,19 @@ resource "google_storage_bucket" "app" {
   project                     = var.project
   public_access_prevention    = "enforced"
   uniform_bucket_level_access = true
+
+  # This CORS configuration is only intended to allow uploads with
+  # signed URLs.
+  cors {
+    origin          = [for domain in var.domains: "https://${domain}"]
+    method          = ["GET", "PUT"]
+    max_age_seconds = 3600
+    response_header = [
+      "Access-Control-Allow-Origin",
+      "Content-Type"
+    ]
+  }
+
 }
 
 resource "google_storage_bucket_iam_member" "member" {
