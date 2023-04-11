@@ -44,7 +44,7 @@ resource "google_compute_backend_bucket" "frontend" {
   custom_response_headers = [
     #"Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'",
     "Referrer-Policy: no-referrer",
-    "Strict-Transport-Security: max-age=15552000; includeSubDomains",
+    "Strict-Transport-Security: max-age=15552000",
     "X-Content-Type-Options: nosniff",
     "X-Frame-Options: SAMEORIGIN",
   ]

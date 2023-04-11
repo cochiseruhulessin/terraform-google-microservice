@@ -305,7 +305,7 @@ resource "google_compute_backend_service" "default" {
   enable_cdn  = var.enable_cdn
   custom_response_headers = [
     "Referrer-Policy: no-referrer",
-    "Strict-Transport-Security: max-age=15552000; includeSubDomains",
+    "Strict-Transport-Security: max-age=15552000",
     "X-Content-Type-Options: nosniff",
     "X-Frame-Options: SAMEORIGIN",
   ]
