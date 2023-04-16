@@ -34,6 +34,7 @@ variable "subscribes" {}
 variable "variables" {}
 
 locals {
+  backend_paths = coalesce(var.backend_paths, [])
   primary_location = var.locations[0]
   variables = merge(
     var.variables,
@@ -41,8 +42,8 @@ locals {
     # TODO: This is quite Python specific and should be named to
     # a more generic environment variable. It exists for legacy
     # compatibility.
-    (var.frontend && length(var.backend_paths) == 0) ? {"ASGI_ROOT_PATH"="/api"} : {},
-    (var.frontend && length(var.backend_paths) == 0) ? {"HTTP_MOUNT_PATH"="/api"} : {},
+    (var.frontend && length(local.backend_paths) == 0) ? {"ASGI_ROOT_PATH"="/api"} : {},
+    (var.frontend && length(local.backend_paths) == 0) ? {"HTTP_MOUNT_PATH"="/api"} : {},
     (var.storage_bucket != null) ? {"APP_STORAGE_BUCKET"=var.storage_bucket} : {}
   )
 }
