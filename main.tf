@@ -177,6 +177,7 @@ module "cloudrun" {
   ingress             = var.ingress
   invokers            = var.invokers
   locations           = var.locations
+  min_instances       = var.min_instances
   project             = local.services_project_id
   project_prefix      = var.project_prefix
   source              = "./modules/cloudrun"

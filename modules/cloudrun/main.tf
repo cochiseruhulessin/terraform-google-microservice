@@ -21,6 +21,7 @@ variable "index_key" { type = string  }
 variable "ingress" { type = string  }
 variable "invokers" {}
 variable "locations" { type = list(string) }
+variable "min_instances" { type = number }
 variable "project" { type = string }
 variable "project_prefix" { type = string }
 variable "secrets" { default = [] }
@@ -77,15 +78,17 @@ resource "google_cloud_run_service" "default" {
 
   template {
     metadata {
-      annotations = {
+      annotations = merge({
+        "run.googleapis.com/client-name" = "terraform",
         "run.googleapis.com/secrets": (length(var.secrets) > 0) ? join(",",
           [
             for spec in var.secrets:
             "${spec.secret}:projects/${spec.project_id}/secrets/${spec.secret}"
           ]
         ) : null
-        #SECRET_LOOKUP_NAME:projects/PROJECT_NUMBER/secrets/SECRET_NAME
-      }
+      },
+      (var.min_instances != null) ? {"autoscaling.knative.dev/minScale": "${var.min_instances}"} : {}
+      )
     }
 
     spec {

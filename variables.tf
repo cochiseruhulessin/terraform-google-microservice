@@ -145,6 +145,12 @@ variable "keys" {
   default = []
 }
 
+variable "min_instances" {
+  type        = number
+  default     = null
+  description = "Minimum number of instances."
+}
+
 variable "mount_service_account_key" {
   type    = bool
   default = false
