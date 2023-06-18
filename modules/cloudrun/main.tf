@@ -59,7 +59,7 @@ locals {
   backend_paths = coalesce(var.backend_paths, [])
   primary_location = var.locations[0].name
   locations = {for spec in var.locations: spec.name => spec}
-  sql_secret ="cloudql-connections-${var.service_id}"
+  sql_secret ="cloudsql-connections"
   variables = merge(
     var.variables,
 
@@ -129,6 +129,10 @@ resource "google_cloud_run_service" "default" {
   location                    = each.key
   autogenerate_revision_name  = true
 
+  depends_on = [
+    google_secret_manager_secret.sql
+  ]
+
   metadata {
     annotations = {
       "run.googleapis.com/ingress": var.ingress,
@@ -163,10 +167,10 @@ resource "google_cloud_run_service" "default" {
         for_each = (length(var.sql_databases) > 0) ? [true] : []
 
         content {
-          name = "rdbms"
+          name = local.sql_secret
 
           secret {
-            secret_name   = google_secret_manager_secret.sql[0].secret_id
+            secret_name   = local.sql_secret
             default_mode  = "0400"
 
             items {
@@ -204,7 +208,7 @@ resource "google_cloud_run_service" "default" {
         dynamic "volume_mounts" {
           for_each = {for k, v in var.secrets: k => v if try(v.mount, null) != null}
           content {
-            mount_path  = "/var/run/secrets"
+            mount_path  = "/etc/secrets"
             name        = volume_mounts.value.secret
           }
         }
@@ -212,8 +216,8 @@ resource "google_cloud_run_service" "default" {
         dynamic "volume_mounts" {
           for_each = (length(var.sql_databases) > 0) ? [true] : []
           content {
-            mount_path  = "/var/run/secrets"
-            name        = "rdbms"
+            mount_path  = "/etc/secrets"
+            name        = local.sql_secret
           }
         }
 
