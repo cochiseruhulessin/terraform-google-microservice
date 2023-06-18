@@ -20,7 +20,15 @@ variable "http_loglevel" { type = string }
 variable "index_key" { type = string  }
 variable "ingress" { type = string  }
 variable "invokers" {}
-variable "locations" { type = list(string) }
+variable "locations" {
+  type = list(
+    object({
+      name=string
+      vpc_access_connector=string
+      vpc_access_egress=string
+    })
+  )
+}
 variable "min_instances" { type = number }
 variable "project" { type = string }
 variable "project_prefix" { type = string }
@@ -36,7 +44,8 @@ variable "variables" {}
 
 locals {
   backend_paths = coalesce(var.backend_paths, [])
-  primary_location = var.locations[0]
+  primary_location = var.locations[0].name
+  locations = {for spec in var.locations: spec.name => spec}
   variables = merge(
     var.variables,
 
@@ -63,7 +72,7 @@ resource "google_service_account_iam_binding" "deployers" {
 # Create the Cloud Run service, a backend, network endpoint
 # group.
 resource "google_cloud_run_service" "default" {
-  for_each                    = toset(var.locations)
+  for_each                    = local.locations
   project                     = var.project
   name                        = var.service_id
   location                    = each.key
@@ -87,7 +96,11 @@ resource "google_cloud_run_service" "default" {
           ]
         ) : null
       },
-      (var.min_instances != null) ? {"autoscaling.knative.dev/minScale": "${var.min_instances}"} : {}
+      (var.min_instances != null) ? {"autoscaling.knative.dev/minScale": "${var.min_instances}"} : {},
+      (each.value.vpc_access_connector != null) ? {
+        "run.googleapis.com/vpc-access-connector": each.value.vpc_access_connector,
+        "run.googleapis.com/vpc-access-egress": try(each.value.vpc_access_egress, "all-traffic")
+      } : {},
       )
     }
 
@@ -415,7 +428,7 @@ resource "random_string" "keepalive" {
   special     = false
   upper       = false
   depends_on  = [google_cloud_run_service.default]
-  for_each    = toset(var.locations)
+  for_each    = local.locations
 }
 
 data "google_pubsub_topic" "keepalive" {
@@ -424,7 +437,7 @@ data "google_pubsub_topic" "keepalive" {
 }
 
 resource "google_eventarc_trigger" "keepalive" {
-  for_each        = toset(var.locations)
+  for_each        = local.locations
   project         = google_cloud_run_service.default[each.key].project
   name            = "keepalive-${random_string.keepalive[each.key].result}"
   location        = google_cloud_run_service.default[each.key].location

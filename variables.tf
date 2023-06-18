@@ -13,7 +13,7 @@ variable "accepted_hosts" {
 }
 
 variable "backend_paths" {
-  default     = null
+  default     = []
   description = "Paths that must be routed to the backend. Use in combination with `frontend=true`."
   type        = list(string)
 }
@@ -162,7 +162,13 @@ variable "loadbalancer" {
 }
 
 variable "locations" {
-  type = list(string)
+  type = list(
+    object({
+      name=string
+      vpc_access_connector=string
+      vpc_access_egress=string
+    })
+  )
 }
 
 variable "org_id" {

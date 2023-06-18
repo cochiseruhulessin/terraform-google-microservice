@@ -15,7 +15,8 @@ variable "backend_id" {
 }
 
 variable "backend_paths" {
-  type = list(string)
+  type    = list(string)
+  default = []
 }
 
 variable "dns_project" {
@@ -41,7 +42,13 @@ variable "frontend" {
 }
 
 variable "locations" {
-  type = list(string)
+  type = list(
+    object({
+      name=string
+      vpc_access_connector=string
+      vpc_access_egress=string
+    })
+  )
 }
 
 variable "project" {
