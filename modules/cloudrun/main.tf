@@ -137,10 +137,10 @@ resource "google_cloud_run_service" "default" {
       annotations = merge({
         "run.googleapis.com/client-name" = "terraform",
         "run.googleapis.com/secrets": (length(var.secrets) > 0) ? join(",",
-          [
+          concat([
             for spec in var.secrets:
             "${spec.secret}:projects/${spec.project_id}/secrets/${spec.secret}"
-          ]
+          ], (length(var.sql_databases) > 0) ? ["${local.sql_secret}:projects/${var.project}/secrets/${local.sql_secret}"] : [])
         ) : null
       },
       (var.min_instances != null) ? {"autoscaling.knative.dev/minScale": "${var.min_instances}"} : {},
