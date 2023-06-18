@@ -242,6 +242,17 @@ variable "signing_key_version" {
   default = 1
 }
 
+variable "sql_databases" {
+  type = list(
+    object({
+      master=string
+      name=string
+      replicas=list(string)
+    })
+  )
+  default = []
+}
+
 variable "storage_bucket" {
   description = "Non-public storage bucket used by the application."
   default     = null

@@ -15,20 +15,13 @@ terraform {
 }
 
 locals {
-  primary_location  = var.locations[0]
-  project           = google_project.service.project_id
-  #services          = [
-  #  for spec in google_cloud_run_service.default:
-  #  {location = spec.location, name = spec.name, project = spec.project}
-  #]
-  service_account   = "${var.project_prefix}-${var.service_id}"
-  service_domain    = coalesce(var.service_domain, "${var.service_id}.${var.base_domain}")
-  #suffix            = {
-  #  for location, spec in random_string.locations:
-  #  location => spec.result
-  #}
+  primary_location    = var.locations[0]
+  project             = google_project.service.project_id
+  service_account     = "${var.project_prefix}-${var.service_id}"
+  service_domain      = coalesce(var.service_domain, "${var.service_id}.${var.base_domain}")
   secrets             = {for spec in var.secrets: spec.name => spec}
   services_project_id = "${var.project}-svc"
+  sql_databases       = {for spec in var.sql_databases: spec.name => spec}
   triggers            = {
     for params in setproduct(toset(var.locations), toset(var.events)):
       "${params[1]}/${params[0]}" => {
@@ -162,6 +155,16 @@ module "storage" {
   service_account   = google_service_account.default.email
 }
 
+module "sql" {
+  depends_on  = [google_project_service.required]
+  for_each    = local.sql_databases
+  master      = each.value.master
+  name        = each.value.name
+  project     = local.services_project_id
+  replicas    = each.value.replicas
+  source      = "./modules/sql"
+}
+
 module "cloudrun" {
   backend_paths       = var.backend_paths
   count               = (var.platform == "cloudrun") ? 1 : 0
@@ -187,6 +190,7 @@ module "cloudrun" {
   service_id          = var.service_id
   service_project     = google_project.service.project_id
   signing_key         = module.crypto.signing_key
+  sql_databases       = [for spec in module.sql: spec.connection]
   storage_bucket      = (var.storage_bucket != null) ? module.storage[0].bucket_name : null
   subscribes          = var.subscribes
   variables           = var.variables
@@ -197,6 +201,7 @@ module "cloudrun" {
     module.crypto,
     module.pubsub,
     module.secrets,
+    module.sql,
     module.storage
   ]
 }

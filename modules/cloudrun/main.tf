@@ -39,6 +39,19 @@ variable "service_id" { type = string }
 variable "signing_key" { type = string }
 variable "service_project" { type = string }
 variable "storage_bucket" { type = string }
+variable "sql_databases" {
+  type=list(
+    object({
+      connection=string
+      engine=string
+      host=string
+      port=number
+      name=string
+      username=string
+      password=string
+    })
+  )
+}
 variable "subscribes" {}
 variable "variables" {}
 
@@ -46,6 +59,7 @@ locals {
   backend_paths = coalesce(var.backend_paths, [])
   primary_location = var.locations[0].name
   locations = {for spec in var.locations: spec.name => spec}
+  sql_secret ="cloudql-connections-${var.service_id}"
   variables = merge(
     var.variables,
 
@@ -67,6 +81,39 @@ resource "google_service_account_iam_binding" "deployers" {
   service_account_id  = var.service_account
   role                = "roles/iam.serviceAccountUser"
   members             = var.deployers
+}
+
+# Create a database configuration file, if SQL databases are
+# specified.
+resource "google_secret_manager_secret" "sql" {
+  count       = (length(var.sql_databases) > 0) ? 1 : 0
+  project     = var.project
+  secret_id   = local.sql_secret
+
+  replication {
+    user_managed {
+      dynamic "replicas" {
+        for_each = toset(keys(local.locations))
+        content {
+          location = replicas.key
+        }
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_version" "sql" {
+  count       = (length(var.sql_databases) > 0) ? 1 : 0
+  secret      = google_secret_manager_secret.sql[0].id
+  secret_data = yamlencode(var.sql_databases)
+}
+
+resource "google_secret_manager_secret_iam_binding" "secretAccessor" {
+  count       = (length(var.sql_databases) > 0) ? 1 : 0
+  project     = google_secret_manager_secret.sql[0].project
+  secret_id   = google_secret_manager_secret.sql[0].secret_id
+  role        = "roles/secretmanager.secretAccessor"
+  members     = ["serviceAccount:${data.google_service_account.default.email}"]
 }
 
 # Create the Cloud Run service, a backend, network endpoint
@@ -109,6 +156,24 @@ resource "google_cloud_run_service" "default" {
       service_account_name  = data.google_service_account.default.email
 
       dynamic "volumes" {
+        for_each = (length(var.sql_databases) > 0) ? [true] : []
+
+        content {
+          name = "rdbms"
+
+          secret {
+            secret_name   = google_secret_manager_secret.sql[0].secret_id
+            default_mode  = "0400"
+
+            items {
+              key = "latest"
+              path = "rdbms.yml"
+            }
+          }
+        }
+      }
+
+      dynamic "volumes" {
         for_each = {for spec in var.secrets: spec.name => spec if try(spec.mount, null) != null}
         content {
           name = volumes.value.secret
@@ -139,6 +204,15 @@ resource "google_cloud_run_service" "default" {
             name        = volume_mounts.value.secret
           }
         }
+
+        dynamic "volume_mounts" {
+          for_each = (length(var.sql_databases) > 0) ? [true] : []
+          content {
+            mount_path  = "/var/run/secrets"
+            name        = "rdbms"
+          }
+        }
+
 
         resources {
           limits = {
