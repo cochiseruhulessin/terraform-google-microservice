@@ -91,7 +91,7 @@ resource "google_service_account_iam_binding" "deployers" {
 # specified.
 resource "google_secret_manager_secret" "sql" {
   count       = (length(var.sql_databases) > 0) ? 1 : 0
-  project     = var.project
+  project     = var.service_project
   secret_id   = local.sql_secret
 
   replication {
