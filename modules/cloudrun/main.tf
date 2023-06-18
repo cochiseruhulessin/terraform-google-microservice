@@ -140,7 +140,7 @@ resource "google_cloud_run_service" "default" {
           concat([
             for spec in var.secrets:
             "${spec.secret}:projects/${spec.project_id}/secrets/${spec.secret}"
-          ], (length(var.sql_databases) > 0) ? ["${local.sql_secret}:projects/${var.project}/secrets/${local.sql_secret}"] : [])
+          ], (length(var.sql_databases) > 0) ? ["${local.sql_secret}:projects/${var.service_project}/secrets/${local.sql_secret}"] : [])
         ) : null
       },
       (var.min_instances != null) ? {"autoscaling.knative.dev/minScale": "${var.min_instances}"} : {},
