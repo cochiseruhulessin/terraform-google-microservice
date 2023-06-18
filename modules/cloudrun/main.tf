@@ -340,6 +340,11 @@ resource "google_cloud_run_service" "default" {
           name  = "PYTHONUNBUFFERED"
           value = "True"
         }
+
+        env {
+          name  = "RDBMS_CONNECTIONS"
+          value = "/etc/secrets/rdbms.yml"
+        }
       }
     }
   }
