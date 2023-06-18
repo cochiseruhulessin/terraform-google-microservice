@@ -47,7 +47,7 @@ variable "sql_databases" {
       host=string
       port=number
       name=string
-      username=string
+      user=string
       password=string
     })
   )

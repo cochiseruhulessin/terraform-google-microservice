@@ -60,7 +60,7 @@ output "connection" {
     host=data.google_sql_database_instance.master.private_ip_address
     port=5432
     name=local.database
+    user=local.username
     password=local.password
-    username=local.username
   }
 }
