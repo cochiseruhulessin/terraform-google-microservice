@@ -76,6 +76,10 @@ data "google_service_account" "default" {
   account_id = var.service_account
 }
 
+data "google_project" "svc" {
+  project_id = var.service_project
+}
+
 # Allow the deployers to act as this service account
 resource "google_service_account_iam_binding" "deployers" {
   service_account_id  = var.service_account
@@ -140,7 +144,7 @@ resource "google_cloud_run_service" "default" {
           concat([
             for spec in var.secrets:
             "${spec.secret}:projects/${spec.project_id}/secrets/${spec.secret}"
-          ], (length(var.sql_databases) > 0) ? ["${local.sql_secret}:projects/${var.service_project}/secrets/${local.sql_secret}"] : [])
+          ], (length(var.sql_databases) > 0) ? ["${local.sql_secret}:projects/${data.google_project.svc.number}/secrets/${local.sql_secret}"] : [])
         ) : null
       },
       (var.min_instances != null) ? {"autoscaling.knative.dev/minScale": "${var.min_instances}"} : {},
