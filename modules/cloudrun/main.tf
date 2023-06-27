@@ -342,7 +342,7 @@ resource "google_cloud_run_service" "default" {
         }
 
         env {
-          name  = "RDBMS_CONNECTIONS"
+          name  = "RDBMS_CONFIG_FILE"
           value = "/etc/secrets/rdbms.yml"
         }
       }
