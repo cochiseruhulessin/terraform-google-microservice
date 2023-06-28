@@ -145,6 +145,12 @@ variable "keys" {
   default = []
 }
 
+variable "memory" {
+  type        = string
+  default     = "512Mi"
+  description = "Memory allocated to Cloud Run instances."
+}
+
 variable "min_instances" {
   type        = number
   default     = null

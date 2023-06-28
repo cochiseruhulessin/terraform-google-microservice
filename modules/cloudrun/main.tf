@@ -29,6 +29,7 @@ variable "locations" {
     })
   )
 }
+variable "memory" { type = string }
 variable "min_instances" { type = number }
 variable "project" { type = string }
 variable "project_prefix" { type = string }
@@ -225,7 +226,7 @@ resource "google_cloud_run_service" "default" {
         resources {
           limits = {
             cpu = "${var.cpu_count}000m"
-            memory: "512Mi"
+            memory: var.memory
           }
         }
 
