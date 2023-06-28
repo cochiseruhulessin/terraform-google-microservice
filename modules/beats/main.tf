@@ -35,6 +35,7 @@ resource "google_cloud_scheduler_job" "keepalive" {
   description       = "Issues the command ${var.command_name}"
   schedule          = var.schedule
   region            = "europe-west3"
+  attempt_deadline  = "30m"
 
   pubsub_target {
     topic_name = data.google_pubsub_topic.commands.id
