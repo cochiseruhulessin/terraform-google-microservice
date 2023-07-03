@@ -510,6 +510,20 @@ resource "google_eventarc_trigger" "commands" {
   }
 }
 
+resource "google_cloud_tasks_queue" "tasks" {
+  project   = var.project
+  name      = var.service_id
+  location  = "europe-west3"
+}
+
+resource "google_cloud_tasks_queue_iam_member" "member" {
+  project   = google_cloud_tasks_queue.tasks.project
+  location  = google_cloud_tasks_queue.tasks.location
+  name      = google_cloud_tasks_queue.tasks.name
+  role      = "roles/cloudtasks.enqueuer"
+  member    = "serviceAccount:${data.google_service_account.default.email}"
+}
+
 output "backend_id" {
   value = google_compute_backend_service.default.id
 }
