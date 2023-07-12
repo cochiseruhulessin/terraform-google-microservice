@@ -29,13 +29,12 @@ data "google_pubsub_topic" "commands" {
   name    = var.command_topic
 }
 
-resource "google_cloud_scheduler_job" "keepalive" {
+resource "google_cloud_scheduler_job" "commands" {
   project           = var.project
   name              = var.name
   description       = "Issues the command ${var.command_name}"
   schedule          = var.schedule
   region            = "europe-west3"
-  attempt_deadline  = "1800s"
 
   pubsub_target {
     topic_name = data.google_pubsub_topic.commands.id
