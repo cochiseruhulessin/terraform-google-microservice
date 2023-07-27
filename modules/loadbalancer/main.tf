@@ -20,7 +20,7 @@ resource "google_storage_bucket" "static" {
   name                        = each.key
   location                    = "EU"
   uniform_bucket_level_access = true
-  public_access_prevention    = (each.value.public == true) ? "enforced" : "inherited"
+  public_access_prevention    = (each.value.public == true) ? "inherited" : "enforced"
 }
 
 resource "google_compute_backend_bucket" "static" {
