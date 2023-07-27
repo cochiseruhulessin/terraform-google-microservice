@@ -37,6 +37,15 @@ resource "google_compute_backend_bucket" "static" {
   ]
 }
 
+resource "google_storage_bucket_iam_binding" "static" {
+  depends_on  = [google_storage_bucket.static]
+  for_each    = var.buckets
+  bucket      = each.key
+  role        = "roles/storage.legacyObjectReader"
+  members     = ["allUsers"]
+}
+
+
 
 # Create a bucket to hold the assets and a corresponding backend
 # service with the proper headers configured.
