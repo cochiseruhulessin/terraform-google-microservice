@@ -5,7 +5,38 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+# Create static storage buckets
+resource "random_string" "static" {
+  for_each  = var.buckets
+  length    = 6
+  special   = false
+  upper     = false
+}
+
+resource "google_storage_bucket" "static" {
+  for_each                    = var.buckets
+  project                     = var.project
+  name                        = each.key
+  location                    = "EU"
+  uniform_bucket_level_access = true
+  public_access_prevention    = (each.value.public == true) ? "enforced" : "inherited"
+}
+
+resource "google_compute_backend_bucket" "static" {
+  depends_on  = [google_storage_bucket.static]
+  for_each    = var.buckets 
+  project     = var.project
+  name        = "static-${random_string.static[each.key].result}"
+  description = "Backend bucket for ${each.key}"
+  bucket_name = each.key
+  enable_cdn  = false
+
+  custom_response_headers = [
+    "Access-Control-Allow-Origin: *",
+  ]
+}
+
 
 # Create a bucket to hold the assets and a corresponding backend
 # service with the proper headers configured.
@@ -56,10 +87,33 @@ resource "google_compute_url_map" "default" {
   default_service = (var.frontend) ? google_compute_backend_bucket.frontend[var.service_domain].id : var.backend_id
 
   dynamic "host_rule" {
-    for_each = (var.frontend == false) ? toset([]) : toset(concat([var.service_domain], var.domains))
+    for_each = (var.frontend == false && length(var.buckets) == 0) ? toset([]) : toset(concat([var.service_domain], var.domains))
     content {
       hosts = concat([host_rule.key], var.accepted_hosts)
       path_matcher = "default"
+    }
+  }
+
+  dynamic "path_matcher" {
+    for_each = (length(var.buckets) > 0) ? toset([var.service_domain]) : toset([])
+    content {
+      name = "default"
+      default_service = var.backend_id
+
+      dynamic "path_rule" {
+        for_each = var.buckets
+
+        content {
+          paths = [path_rule.value.path]
+          service = google_compute_backend_bucket.static[path_rule.key].id
+
+          route_action {
+            url_rewrite {
+              path_prefix_rewrite = "/"
+            }
+          }
+        }
+      }
     }
   }
 

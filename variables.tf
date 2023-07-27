@@ -33,6 +33,17 @@ variable "beats" {
   default = []
 }
 
+variable "buckets" {
+  type = list(
+    object({
+      name    = string
+      path    = string
+      public  = bool
+    })
+  )
+  default = []
+}
+
 variable "billing_account" {
   type = string
 }

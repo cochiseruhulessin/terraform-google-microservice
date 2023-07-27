@@ -15,6 +15,7 @@ terraform {
 }
 
 locals {
+  buckets             = {for spec in var.buckets: spec.name => spec}
   primary_location    = var.locations[0]
   project             = google_project.service.project_id
   service_account     = "${var.project_prefix}-${var.service_id}"
@@ -289,6 +290,7 @@ module "loadbalancer" {
   ]
   accepted_hosts  = var.accepted_hosts
   backend_paths   = var.backend_paths
+  buckets         = local.buckets
   count           = (var.loadbalancer) ? 1 : 0
   backend_id      = module.cloudrun[0].backend_id
   frontend        = var.frontend

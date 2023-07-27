@@ -19,6 +19,10 @@ variable "backend_paths" {
   default = []
 }
 
+variable "buckets" {
+  default = {}
+}
+
 variable "dns_project" {
   type = string
 }
