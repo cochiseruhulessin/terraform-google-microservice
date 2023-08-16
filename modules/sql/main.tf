@@ -41,16 +41,18 @@ resource "random_string" "password" {
 }
 
 resource "google_sql_database" "cluster" {
-  project   = var.project
-  name      = local.database
-  instance  = data.google_sql_database_instance.master.name
+  depends_on  = [data.google_sql_database_instance.master]
+  project     = var.project
+  name        = local.database
+  instance    = data.google_sql_database_instance.master.name
 }
 
 resource "google_sql_user" "user" {
-  project   = var.project
-  name      = local.username
-  instance  = data.google_sql_database_instance.master.name
-  password  = local.password
+  depends_on  = [data.google_sql_database_instance.master]
+  project     = var.project
+  name        = local.username
+  instance    = data.google_sql_database_instance.master.name
+  password    = local.password
 }
 
 output "connection" {

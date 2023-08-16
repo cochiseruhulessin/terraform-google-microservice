@@ -409,7 +409,7 @@ resource "google_compute_backend_service" "default" {
   timeout_sec = 30
   enable_cdn  = var.enable_cdn
   custom_response_headers = [
-    "Referrer-Policy: no-referrer",
+    "Referrer-Policy: same-origin",
     "Strict-Transport-Security: max-age=15552000",
     "X-Content-Type-Options: nosniff",
     "X-Frame-Options: SAMEORIGIN",
