@@ -90,6 +90,31 @@ resource "google_compute_backend_bucket" "frontend" {
   ]
 }
 
+resource "google_compute_url_map" "redirect" {
+  project = var.project
+  name    = "redirect"
+
+  default_url_redirect {
+    redirect_response_code = "MOVED_PERMANENTLY_DEFAULT"  // 301 redirect
+    strip_query            = false
+    https_redirect         = true  // this is the magic
+  }
+}
+
+resource "google_compute_target_http_proxy" "redirect" {
+  project = var.project
+  name    = "redirect"
+  url_map = google_compute_url_map.redirect.self_link
+}
+
+resource "google_compute_global_forwarding_rule" "redirect" {
+  name       = "redirect"
+  project    = var.project
+  target     = google_compute_target_http_proxy.redirect.self_link
+  ip_address = google_compute_global_address.ipv4.address
+  port_range = "80"
+}
+
 resource "google_compute_url_map" "default" {
   project         = var.project
   name            = "service-${var.service_id}"
